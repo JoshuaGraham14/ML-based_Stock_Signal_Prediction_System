@@ -1,0 +1,36 @@
+stock_utils2.py
+
+# Ignore Python bytecode files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore config.json to keep API keys and other sensitive data out of version control
+config.json
+
+# Ignore the virtual environment directory
+venv/
+
+# Ignore IDE/editor specific files
+.vscode/
+.idea/
+
+# Ignore log files and temporary files
+*.log
+*.tmp
+
+# Ignore coverage reports
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore MacOS specific files
+.DS_Store
+
+# Ignore environment variables file
+.env
