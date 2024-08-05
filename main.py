@@ -9,15 +9,13 @@ import seaborn as sns
 
 from stock_utils import *
 
-def create_train_data(df, cols_of_interest):
-    df = get_regressions(df, idx_with_mins, idx_with_maxs)
-
+def create_train_data(df, technical_indicators):
     _data_ = df[(df['loc_min'] > 0) | (df['loc_max'] > 0)].reset_index(drop = True)
 
     #create a dummy variable for local_min (0) and max (1)
     _data_['target'] = [1 if x > 0 else 0 for x in _data_.loc_max]
 
-    _data_ = _data_[cols_of_interest]
+    _data_ = _data_[technical_indicators+['target']]
 
     return _data_.dropna(axis = 0)
 
@@ -51,8 +49,8 @@ def display_coefficients(model, feature_names, show_graph=False):
         
         plt.show()
 
-def train_and_test(training_df, cols_of_interest, show_matrix=True, show_report=True, show_intercept=True, show_coefficients=True):
-    X = training_df[cols_of_interest].drop(columns=['target'])
+def train_and_test(training_df, technical_indicators, show_matrix=True, show_report=True, show_intercept=True, show_coefficients=True):
+    X = training_df[technical_indicators]
     y = training_df['target']
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -77,28 +75,23 @@ def train_and_test(training_df, cols_of_interest, show_matrix=True, show_report=
         print("Intercept:", round(model.intercept_[0], 3))
 
     if show_coefficients:
-        display_coefficients(model, cols_of_interest)
+        display_coefficients(model, technical_indicators, show_graph=False)
 
 '''
 -----------********** MAIN **********-----------
 '''
 
-stock_symbol = 'WMT'
-cols_of_interest = ["normalized_value", "2_reg", "3_reg", "5_reg", "10_reg", "20_reg", "50_reg", "target"]
-# cols_of_interest2 = ["normalized_value", "2_reg", "3_reg", "5_reg", "10_reg", "20_reg", "50_reg"]
+stock_symbol = 'AAPL'
+technical_indicators = ["normalized_value", "2_reg", "3_reg", "5_reg", "10_reg", "20_reg", "50_reg", "adx", "ema", "percent_b", "rsi"]
 
-df = get_stock(stock_symbol, outputsize=2000)
-
+stock_utils = StockUtils(symbol=stock_symbol, outputsize=2000)
+df = stock_utils.get_indicators(technical_indicators)
 print(df)
 
-df = get_normalized(df)
-df, idx_with_mins, idx_with_maxs = get_max_min(df)
-df = get_regressions(df, idx_with_mins, idx_with_maxs)
-
-training_df = create_train_data(df, cols_of_interest)
+training_df = create_train_data(df, technical_indicators)
 
 print(training_df)
 
-train_and_test(training_df, cols_of_interest)
+train_and_test(training_df, technical_indicators)
 
 # plot_graph(df, stock_symbol, show_maxs=True, show_mins=True)

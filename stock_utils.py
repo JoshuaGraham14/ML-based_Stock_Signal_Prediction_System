@@ -168,33 +168,33 @@ class StockUtils:
         sma = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).with_sma(time_period=time_period).as_pandas()
         self.df['sma'] = sma['sma'].values
 
-    def get_indicators(self, include_normalized=True, regression_days=None, include_adx=False, include_ema=False, include_percent_b=False, include_rsi=False, include_sma=False):
+    def get_indicators(self, technical_indicators):
         """
         Calculate specified indicators for the stock data.
         """
-        
-        if include_normalized:
+        if "normalized_value" in technical_indicators:
             self.get_normalized()
         
+        regression_days = [int(ind.split('_')[0]) for ind in technical_indicators if ind.endswith('_reg')]
         if regression_days:
             if not hasattr(self, 'idx_with_mins') or not hasattr(self, 'idx_with_maxs'):
                 self.get_max_min()
             for n in regression_days:
                 self.n_day_regression(n, list(self.idx_with_mins) + list(self.idx_with_maxs))
-
-        if include_adx:
+        
+        if "adx" in technical_indicators:
             self.get_adx()
         
-        if include_ema:
+        if "ema" in technical_indicators:
             self.get_ema()
         
-        if include_percent_b:
+        if "percent_b" in technical_indicators:
             self.get_percent_b()
         
-        if include_rsi:
+        if "rsi" in technical_indicators:
             self.get_rsi()
         
-        if include_sma:
+        if "sma" in technical_indicators:
             self.get_sma()
         
         return self.df
