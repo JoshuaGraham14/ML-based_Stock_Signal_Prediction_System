@@ -19,6 +19,7 @@ class StockUtils:
         self.interval = interval
         self.outputsize = outputsize
         self.df = None
+        self.api_call_count = 0
 
         self.get_stock()
 
@@ -32,6 +33,13 @@ class StockUtils:
         with open(config_path) as config_file:
             config = json.load(config_file)
         return config['api_key']
+    
+    def track_api_call(self, fetch_data_string):
+        """
+        Increment the API call counter and print the fetch message.
+        """
+        self.api_call_count += 1
+        print(f"Making API call to fetch {fetch_data_string}... (API call count: {self.api_call_count})")
 
     def get_stock(self):
         """
@@ -46,6 +54,7 @@ class StockUtils:
                 data = json.load(json_file)
             print(f"Loaded data from {json_filepath}")
         else:
+            self.track_api_call(f"stock data for {self.symbol}")
             ts = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).as_json()
             data = self.transform_to_candle_list(ts)
             with open(json_filepath, 'w') as json_file:
@@ -123,6 +132,7 @@ class StockUtils:
         """
         Fetch ADX indicator data and add it to the DataFrame.
         """
+        self.track_api_call(f"ADX indicator for {self.symbol}")
         adx = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).with_adx().as_pandas()
         self.df['adx'] = adx['adx'].values
 
@@ -130,6 +140,7 @@ class StockUtils:
         """
         Fetch EMA indicator data and add it to the DataFrame.
         """
+        self.track_api_call(f"EMA indicator for {self.symbol} with time period {time_period}")
         ema = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).with_ema(time_period=time_period).as_pandas()
         self.df['ema'] = ema['ema'].values
 
@@ -137,6 +148,7 @@ class StockUtils:
         """
         Fetch Percent B indicator data and add it to the DataFrame.
         """
+        self.track_api_call(f"Percent B indicator for {self.symbol}")
         percent_b = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).with_percent_b().as_pandas()
         self.df['percent_b'] = percent_b['percent_b'].values
 
@@ -144,6 +156,7 @@ class StockUtils:
         """
         Fetch RSI indicator data and add it to the DataFrame.
         """
+        self.track_api_call(f"RSI indicator for {self.symbol}")
         rsi = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).with_rsi().as_pandas()
         self.df['rsi'] = rsi['rsi'].values
 
@@ -151,6 +164,7 @@ class StockUtils:
         """
         Fetch SMA indicator data and add it to the DataFrame.
         """
+        self.track_api_call(f"SMA indicator for {self.symbol} with time period {time_period}")
         sma = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).with_sma(time_period=time_period).as_pandas()
         self.df['sma'] = sma['sma'].values
 
@@ -223,4 +237,4 @@ if __name__ == "__main__":
     )
     print(df)
     print(stock_utils.df)
-    stock_utils.plot_graph()
+    # stock_utils.plot_graph()

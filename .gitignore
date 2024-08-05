@@ -1,5 +1,3 @@
-stock_utils2.py
-
 # Ignore Python bytecode files
 __pycache__/
 *.py[cod]
