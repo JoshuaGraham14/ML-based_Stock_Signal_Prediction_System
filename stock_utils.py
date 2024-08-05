@@ -9,137 +9,218 @@ from scipy.signal import argrelextrema
 from sklearn.linear_model import LinearRegression
 from twelvedata import TDClient
 
-def load_api_key(config_path='config.json'):
-    """
-    Load API key from a JSON configuration file.
-    """
-    with open(config_path) as config_file:
-        config = json.load(config_file)
-    return config['api_key']
+class StockUtils:
+    def __init__(self, symbol, interval="1day", outputsize=5000, config_path='config.json', json_dir='stock_data'):
+        self.api_key = self.load_api_key(config_path)
+        self.td_client = TDClient(apikey=self.api_key)
+        self.json_dir = json_dir
+        os.makedirs(self.json_dir, exist_ok=True)
+        self.symbol = symbol
+        self.interval = interval
+        self.outputsize = outputsize
+        self.df = None
 
-api_key = load_api_key()
+        self.get_stock()
 
-td = TDClient(apikey=api_key)
+    def __str__(self):
+        return f"StockUtils(symbol={self.symbol}, interval={self.interval}, outputsize={self.outputsize})"
 
-JSON_DIR = 'stock_data'
-os.makedirs(JSON_DIR, exist_ok=True)
+    def load_api_key(self, config_path):
+        """
+        Load API key from a JSON configuration file.
+        """
+        with open(config_path) as config_file:
+            config = json.load(config_file)
+        return config['api_key']
 
-def get_stock(symbol, interval="1day", outputsize=5000):
-    """
-    Fetch stock data for a given symbol and save it to a JSON file.
-    """
-    today = datetime.now().strftime('%Y%m%d')
-    json_filename = f'{symbol}_{today}_{interval}_{outputsize}.json'
-    json_filepath = os.path.join(JSON_DIR, json_filename)
-    
-    if os.path.exists(json_filepath):
-        with open(json_filepath, 'r') as json_file:
-            data = json.load(json_file)
-        print(f"Loaded data from {json_filepath}")
-    else:
-        ts = td.time_series(symbol=symbol, interval=interval, outputsize=outputsize).as_json()
-        data = transform_to_candle_list(ts)
-        with open(json_filepath, 'w') as json_file:
-            json.dump(data, json_file)
-        print(f"Saved data to {json_filepath}")
-    
-    return pd.DataFrame(data['candles'])
+    def get_stock(self):
+        """
+        Fetch stock data for a given symbol and save it to a JSON file.
+        """
+        today = datetime.now().strftime('%Y%m%d')
+        json_filename = f'{self.symbol}_{today}_{self.interval}_{self.outputsize}.json'
+        json_filepath = os.path.join(self.json_dir, json_filename)
+        
+        if os.path.exists(json_filepath):
+            with open(json_filepath, 'r') as json_file:
+                data = json.load(json_file)
+            print(f"Loaded data from {json_filepath}")
+        else:
+            ts = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).as_json()
+            data = self.transform_to_candle_list(ts)
+            with open(json_filepath, 'w') as json_file:
+                json.dump(data, json_file)
+            print(f"Saved data to {json_filepath}")
+        
+        self.df = pd.DataFrame(data['candles'])
 
-def transform_to_candle_list(data):
-    """
-    Transform raw stock data into a candle list format.
-    """
-    candle_list = {"candles": []}
-    for item in data:
-        formatted_date = datetime.strptime(item['datetime'], "%Y-%m-%d").strftime("%d/%m/%Y")
-        candle = {
-            "date": formatted_date,
-            "open": float(item["open"]),
-            "high": float(item["high"]),
-            "low": float(item["low"]),
-            "close": float(item["close"]),
-            "volume": int(item["volume"])
-        }
-        candle_list["candles"].append(candle)
-    return candle_list
+    def transform_to_candle_list(self, data):
+        """
+        Transform raw stock data into a candle list format.
+        """
+        candle_list = {"candles": []}
+        for item in data:
+            formatted_date = datetime.strptime(item['datetime'], "%Y-%m-%d").strftime("%d/%m/%Y")
+            candle = {
+                "date": formatted_date,
+                "open": float(item["open"]),
+                "high": float(item["high"]),
+                "low": float(item["low"]),
+                "close": float(item["close"]),
+                "volume": int(item["volume"])
+            }
+            candle_list["candles"].append(candle)
+        return candle_list
 
-def linear_regression(x, y):
-    """
-    Perform linear regression given x and y.
-    """
-    lr = LinearRegression()
-    lr.fit(x, y)
-    return lr.coef_[0][0]
+    def linear_regression(self, x, y):
+        """
+        Perform linear regression given x and y.
+        """
+        lr = LinearRegression()
+        lr.fit(x, y)
+        return lr.coef_[0][0]
 
-def n_day_regression(n, df, idxs):
-    """
-    n day regression.
-    """
-    var_name = f'{n}_reg'
-    df[var_name] = np.nan
+    def n_day_regression(self, n, idxs):
+        """
+        n day regression.
+        """
+        var_name = f'{n}_reg'
+        self.df[var_name] = np.nan
 
-    for idx in idxs:
-        if idx > n:
-            y = df['close'][idx - n: idx].to_numpy().reshape(-1, 1)
-            x = np.arange(0, n).reshape(-1, 1)
-            coef = linear_regression(x, y)
-            df.loc[idx, var_name] = coef
+        for idx in idxs:
+            if idx > n:
+                y = self.df['close'][idx - n: idx].to_numpy().reshape(-1, 1)
+                x = np.arange(0, n).reshape(-1, 1)
+                coef = self.linear_regression(x, y)
+                self.df.loc[idx, var_name] = coef
 
-    return df
+    def normalized_values(self, high, low, close):
+        """
+        Normalize price between 0 and 1.
+        """
+        epsilon = 1e-10
+        range_ = high - low
+        close_range = close - low
+        return close_range / (range_ + epsilon)
 
-def normalized_values(high, low, close):
-    """
-    Normalize price between 0 and 1.
-    """
-    epsilon = 1e-10
-    range_ = high - low
-    close_range = close - low
-    return close_range / (range_ + epsilon)
+    def get_normalized(self):
+        """
+        Apply normalization to stock data.
+        """
+        self.df['normalized_value'] = self.df.apply(lambda x: self.normalized_values(x['high'], x['low'], x['close']), axis=1)
 
-def get_normalized(df):
-    """
-    Apply normalization to stock data.
-    """
-    df['normalized_value'] = df.apply(lambda x: normalized_values(x['high'], x['low'], x['close']), axis=1)
-    return df
+    def get_max_min(self, order=10):
+        """
+        Identify local minima and maxima in the stock data.
+        """
+        self.df['loc_min'] = self.df.iloc[argrelextrema(self.df['close'].values, np.less_equal, order=order)[0]]['close']
+        self.df['loc_max'] = self.df.iloc[argrelextrema(self.df['close'].values, np.greater_equal, order=order)[0]]['close']
+        
+        self.idx_with_mins = np.where(self.df['loc_min'] > 0)[0]
+        self.idx_with_maxs = np.where(self.df['loc_max'] > 0)[0]
 
-def get_max_min(df, order=10):
-    """
-    Identify local minima and maxima in the stock data.
-    """
-    df['loc_min'] = df.iloc[argrelextrema(df['close'].values, np.less_equal, order=order)[0]]['close']
-    df['loc_max'] = df.iloc[argrelextrema(df['close'].values, np.greater_equal, order=order)[0]]['close']
-    
-    idx_with_mins = np.where(df['loc_min'] > 0)[0]
-    idx_with_maxs = np.where(df['loc_max'] > 0)[0]
-    
-    return df, idx_with_mins, idx_with_maxs
+    def get_adx(self):
+        """
+        Fetch ADX indicator data and add it to the DataFrame.
+        """
+        adx = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).with_adx().as_pandas()
+        self.df['adx'] = adx['adx'].values
 
-def get_regressions(df, idx_with_mins, idx_with_maxs):
-    """
-    Calculate multiple n-day regressions for given indices.
-    """
-    for n in [2, 3, 5, 10, 20, 50]:
-        df = n_day_regression(n, df, list(idx_with_mins) + list(idx_with_maxs))
-    return df
+    def get_ema(self, time_period=20):
+        """
+        Fetch EMA indicator data and add it to the DataFrame.
+        """
+        ema = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).with_ema(time_period=time_period).as_pandas()
+        self.df['ema'] = ema['ema'].values
 
-def plot_graph(df, stock_symbol, show_mins=True, show_maxs=True):
-    """
-    Plot stock data with optional minima and maxima.
-    """
-    plt.figure(figsize=(10, 5))
-    x = pd.to_datetime(df['date'], format='%d/%m/%Y')
-    y = df["close"]
-    plt.plot(x, y, ls='-', color="black", label="Daily")
-    
-    if show_mins:
-        plt.plot(x, df['loc_min'], marker='o', color="green", linestyle='None', label="Local Minima")
-    if show_maxs:
-        plt.plot(x, df['loc_max'], marker='o', color="red", linestyle='None', label="Local Maxima")
-    
-    plt.xlabel("Date")
-    plt.ylabel("Close (USD)")
-    plt.legend()
-    plt.title(f"{stock_symbol}")
-    plt.xticks(rotation=45)
-    plt.show()
+    def get_percent_b(self):
+        """
+        Fetch Percent B indicator data and add it to the DataFrame.
+        """
+        percent_b = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).with_percent_b().as_pandas()
+        self.df['percent_b'] = percent_b['percent_b'].values
+
+    def get_rsi(self):
+        """
+        Fetch RSI indicator data and add it to the DataFrame.
+        """
+        rsi = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).with_rsi().as_pandas()
+        self.df['rsi'] = rsi['rsi'].values
+
+    def get_sma(self, time_period=20):
+        """
+        Fetch SMA indicator data and add it to the DataFrame.
+        """
+        sma = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).with_sma(time_period=time_period).as_pandas()
+        self.df['sma'] = sma['sma'].values
+
+    def get_indicators(self, include_normalized=True, regression_days=None, include_adx=False, include_ema=False, include_percent_b=False, include_rsi=False, include_sma=False):
+        """
+        Calculate specified indicators for the stock data.
+        """
+        
+        if include_normalized:
+            self.get_normalized()
+        
+        if regression_days:
+            if not hasattr(self, 'idx_with_mins') or not hasattr(self, 'idx_with_maxs'):
+                self.get_max_min()
+            for n in regression_days:
+                self.n_day_regression(n, list(self.idx_with_mins) + list(self.idx_with_maxs))
+
+        if include_adx:
+            self.get_adx()
+        
+        if include_ema:
+            self.get_ema()
+        
+        if include_percent_b:
+            self.get_percent_b()
+        
+        if include_rsi:
+            self.get_rsi()
+        
+        if include_sma:
+            self.get_sma()
+        
+        return self.df
+
+    def plot_graph(self, show_mins=True, show_maxs=True):
+        """
+        Plot stock data with optional minima and maxima.
+        """
+        plt.figure(figsize=(10, 5))
+        x = pd.to_datetime(self.df['date'], format='%d/%m/%Y')
+        y = self.df["close"]
+        plt.plot(x, y, ls='-', color="black", label="Daily")
+        
+        if show_mins:
+            plt.plot(x, self.df['loc_min'], marker='o', color="green", linestyle='None', label="Local Minima")
+        if show_maxs:
+            plt.plot(x, self.df['loc_max'], marker='o', color="red", linestyle='None', label="Local Maxima")
+        
+        plt.xlabel("Date")
+        plt.ylabel("Close (USD)")
+        plt.legend()
+        plt.title(f"{self.symbol}")
+        plt.xticks(rotation=45)
+        plt.show()
+
+# Example usage
+if __name__ == "__main__":
+    stock_utils = StockUtils("AAPL", outputsize=2000)
+
+    print(stock_utils.df)
+
+    df = stock_utils.get_indicators(
+        include_normalized=True,
+        regression_days=[2, 3, 5, 10, 20, 50],
+        include_adx=True,
+        include_ema=True,
+        include_percent_b=True,
+        include_rsi=True,
+        include_sma=False
+    )
+    print(df)
+    print(stock_utils.df)
+    stock_utils.plot_graph()
