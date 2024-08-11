@@ -89,19 +89,18 @@ class StockUtils:
         lr.fit(x, y)
         return lr.coef_[0][0]
 
-    def n_day_regression(self, n, idxs):
+    def n_day_regression(self, n):
         """
-        n day regression.
+        n day regression for every data point.
         """
         var_name = f'{n}_reg'
         self.df[var_name] = np.nan
 
-        for idx in idxs:
-            if idx > n:
-                y = self.df['close'][idx - n: idx].to_numpy().reshape(-1, 1)
-                x = np.arange(0, n).reshape(-1, 1)
-                coef = self.linear_regression(x, y)
-                self.df.loc[idx, var_name] = coef
+        for idx in range(n, len(self.df)):
+            y = self.df['close'][idx - n: idx].to_numpy().reshape(-1, 1)
+            x = np.arange(0, n).reshape(-1, 1)
+            coef = self.linear_regression(x, y)
+            self.df.loc[idx, var_name] = coef
 
     def normalized_values(self, high, low, close):
         """
@@ -172,15 +171,15 @@ class StockUtils:
         """
         Calculate specified indicators for the stock data.
         """
+        self.get_max_min()
+
         if "normalized_value" in technical_indicators:
             self.get_normalized()
         
         regression_days = [int(ind.split('_')[0]) for ind in technical_indicators if ind.endswith('_reg')]
         if regression_days:
-            if not hasattr(self, 'idx_with_mins') or not hasattr(self, 'idx_with_maxs'):
-                self.get_max_min()
             for n in regression_days:
-                self.n_day_regression(n, list(self.idx_with_mins) + list(self.idx_with_maxs))
+                self.n_day_regression(n)
         
         if "adx" in technical_indicators:
             self.get_adx()
@@ -219,22 +218,3 @@ class StockUtils:
         plt.title(f"{self.symbol}")
         plt.xticks(rotation=45)
         plt.show()
-
-# Example usage
-if __name__ == "__main__":
-    stock_utils = StockUtils("AAPL", outputsize=2000)
-
-    print(stock_utils.df)
-
-    df = stock_utils.get_indicators(
-        include_normalized=True,
-        regression_days=[2, 3, 5, 10, 20, 50],
-        include_adx=True,
-        include_ema=True,
-        include_percent_b=True,
-        include_rsi=True,
-        include_sma=False
-    )
-    print(df)
-    print(stock_utils.df)
-    # stock_utils.plot_graph()
