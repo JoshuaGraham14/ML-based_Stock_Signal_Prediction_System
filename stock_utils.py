@@ -41,27 +41,46 @@ class StockUtils:
         self.api_call_count += 1
         print(f"Making API call to fetch {fetch_data_string}... (API call count: {self.api_call_count})")
 
+    def fetch_and_save_stock_data(self, json_filepath):
+        """
+        Helper function to fetch stock data and save the DataFrame with calculated indicators.
+        """
+        self.track_api_call(f"stock data for {self.symbol}")
+        ts = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).as_json()
+        data = self.transform_to_candle_list(ts)
+        self.df = pd.DataFrame(data['candles'])
+
+        # Convert 'date' to datetime if needed
+        self.df['date'] = pd.to_datetime(self.df['date'], format='%d/%m/%Y')
+        
+        self.calculate_all_indicators()  # Calculate and store all indicators
+
+        # Save the DataFrame to JSON
+        self.df.to_json(json_filepath, orient='split')
+        print(f"Saved DataFrame to {json_filepath}")
+
     def get_stock(self):
         """
-        Fetch stock data for a given symbol and save it to a JSON file.
+        Fetch stock data for a given symbol and save the DataFrame with all calculated technical indicators.
         """
         today = datetime.now().strftime('%Y%m%d')
         json_filename = f'{self.symbol}_{today}_{self.interval}_{self.outputsize}.json'
         json_filepath = os.path.join(self.json_dir, json_filename)
         
         if os.path.exists(json_filepath):
-            with open(json_filepath, 'r') as json_file:
-                data = json.load(json_file)
-            print(f"Loaded data from {json_filepath}")
+            try:
+                # Load the DataFrame from the JSON file
+                self.df = pd.read_json(json_filepath, orient='split')
+
+                # Ensure the 'date' column is in datetime format
+                self.df['date'] = pd.to_datetime(self.df['date'], format='%d/%m/%Y')
+
+                print(f"Loaded DataFrame from {json_filepath}")
+            except ValueError as e:
+                print(f"Error loading DataFrame: {e}. Re-fetching data and recalculating indicators.")
+                self.fetch_and_save_stock_data(json_filepath)
         else:
-            self.track_api_call(f"stock data for {self.symbol}")
-            ts = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).as_json()
-            data = self.transform_to_candle_list(ts)
-            with open(json_filepath, 'w') as json_file:
-                json.dump(data, json_file)
-            print(f"Saved data to {json_filepath}")
-        
-        self.df = pd.DataFrame(data['candles'])
+            self.fetch_and_save_stock_data(json_filepath)
 
     def transform_to_candle_list(self, data):
         """
@@ -69,6 +88,7 @@ class StockUtils:
         """
         candle_list = {"candles": []}
         for item in data:
+            # Format the date to "05/08/2024" instead of "12\/08\/2024"
             formatted_date = datetime.strptime(item['datetime'], "%Y-%m-%d").strftime("%d/%m/%Y")
             candle = {
                 "date": formatted_date,
@@ -167,35 +187,69 @@ class StockUtils:
         sma = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).with_sma(time_period=time_period).as_pandas()
         self.df['sma'] = sma['sma'].values
 
-    def get_indicators(self, technical_indicators):
+    def calculate_all_indicators(self):
         """
-        Calculate specified indicators for the stock data.
+        Calculate all possible indicators and store them in the DataFrame.
+        This method will be used to pre-calculate indicators when fetching stock data.
         """
         self.get_max_min()
+        self.get_normalized()
+        
+        # Automatically detect all possible regression days from the existing indicator methods
+        regression_days = self.extract_regression_days()
+        for n in regression_days:
+            self.n_day_regression(n)
+        
+        self.get_adx()
+        self.get_ema()
+        # self.get_percent_b()
+        # self.get_rsi()
+        self.get_sma()
 
-        if "normalized_value" in technical_indicators:
-            self.get_normalized()
+    def extract_regression_days(self):
+        """
+        Extract regression days from the current class methods.
+        """
+        regression_days = []
+        for attr in dir(self):
+            if attr.endswith('_reg') and attr.split('_')[0].isdigit():
+                regression_days.append(int(attr.split('_')[0]))
+        return sorted(set(regression_days))
+
+    def get_indicators(self, technical_indicators):
+        """
+        Return specified indicators for the stock data.
+        If the requested indicators are not calculated, they will be calculated on the fly.
+        """
+        # Identify missing indicators that are not in the current DataFrame
+        missing_indicators = [ind for ind in technical_indicators if ind not in self.df.columns]
         
-        regression_days = [int(ind.split('_')[0]) for ind in technical_indicators if ind.endswith('_reg')]
-        if regression_days:
-            for n in regression_days:
-                self.n_day_regression(n)
-        
-        if "adx" in technical_indicators:
-            self.get_adx()
-        
-        if "ema" in technical_indicators:
-            self.get_ema()
-        
-        if "percent_b" in technical_indicators:
-            self.get_percent_b()
-        
-        if "rsi" in technical_indicators:
-            self.get_rsi()
-        
-        if "sma" in technical_indicators:
-            self.get_sma()
-        
+        # Calculate missing indicators if necessary
+        if missing_indicators:
+            if "normalized_value" in missing_indicators:
+                self.get_normalized()
+            regression_days = [int(ind.split('_')[0]) for ind in missing_indicators if ind.endswith('_reg')]
+            if regression_days:
+                for n in regression_days:
+                    self.n_day_regression(n)
+            if "adx" in missing_indicators:
+                self.get_adx()
+            if "ema" in missing_indicators:
+                self.get_ema()
+            if "percent_b" in missing_indicators:
+                self.get_percent_b()
+            if "rsi" in missing_indicators:
+                self.get_rsi()
+            if "sma" in missing_indicators:
+                self.get_sma()
+            
+            # Save the updated DataFrame with the new indicators to JSON
+            today = datetime.now().strftime('%Y%m%d')
+            json_filename = f'{self.symbol}_{today}_{self.interval}_{self.outputsize}.json'
+            json_filepath = os.path.join(self.json_dir, json_filename)
+            self.df.to_json(json_filepath, orient='split')
+            print(f"Updated DataFrame with new indicators saved to {json_filepath}")
+
         return self.df
 
     def plot_graph(self, show_mins=True, show_maxs=True):
