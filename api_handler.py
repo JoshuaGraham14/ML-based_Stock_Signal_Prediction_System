@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 from twelvedata import TDClient
 from twelvedata.exceptions import TwelveDataError
 
@@ -17,18 +18,19 @@ class APIHandler:
         while True:
             try:
                 # Log the function name and the symbol being used
-                print(f"Making API call for {symbol}: {call_function.__name__} ")
+                print(f"Making API call for {symbol}: {call_function.__name__}")
                 
                 # Attempt to make the API call and return the result
                 return call_function()
             except TwelveDataError as e:
                 error_message = str(e)
-                # print(f"Encountered TwelveDataError: {error_message}")
                 
                 # Check if the error message is related to API rate limits
                 if "run out of API credits" in error_message or "API limit" in error_message:
-                    print("API limit reached. Waiting for 60 seconds before retrying...")
-                    self.wait_with_countdown(60)
+                    current_minute = datetime.now().minute
+                    print(f"API limit reached. Current minute: {current_minute}. Waiting for the next minute before retrying...")
+                    
+                    self.wait_for_next_minute(current_minute)
                     continue  # Retry the API call after waiting
                 else:
                     raise e  # Raise other types of TwelveDataError
@@ -36,11 +38,16 @@ class APIHandler:
                 print(f"An unexpected error occurred: {e}")
                 raise e
 
-    def wait_with_countdown(self, wait_time):
+    def wait_for_next_minute(self, current_minute):
         """
-        Wait for the specified time with a countdown, updating every 10 seconds.
+        Wait until the minute changes before retrying the API call, with updates every 10 seconds.
         """
-        for i in range(wait_time, 0, -10):
-            print(f"Waiting for {i} seconds...")
-            time.sleep(10)
-        print("Resuming API calls...")
+        while True:
+            now = datetime.now()
+            current_second = now.second
+            if now.minute != current_minute:
+                print(f"New minute {now.minute} reached. Resuming API calls...")
+                break
+            if current_second % 10 == 0:
+                print(f"Still in minute {current_minute}, current second: {current_second}. Waiting...")
+            time.sleep(1)

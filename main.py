@@ -21,12 +21,12 @@ def fetch_indicators_for_symbols():
         print(f"Fetched indicators for {symbol}")
 
 if __name__ == "__main__":
-    fetch_indicators_for_symbols()
+    # fetch_indicators_for_symbols()
 
-    # # Example usage
-    # training_symbols = ['AAPL', 'WMT', 'MSFT', 'MA', 'AMZN', 'META', 'TSLA', 'SPX', 'GOOG', 'NFLX']
-    # testing_symbols = ['NFLX', 'GOOG']
-    # technical_indicators = ["normalized_value", "2_reg", "3_reg", "5_reg", "10_reg", "20_reg", "50_reg", "adx", "ema", "sma"]
+    # Example usage
+    training_symbols = ['AAPL', 'WMT', 'MSFT', 'MA', 'AMZN', 'META', 'TSLA', 'SPX', 'GOOG', 'NFLX']
+    testing_symbols = ['NFLX', 'GOOG']
+    technical_indicators = ["normalized_value", "2_reg", "3_reg", "5_reg", "10_reg", "20_reg", "50_reg", "adx", "ema", "sma"]
 
-    # model = StockPredictionModel(training_symbols, testing_symbols, technical_indicators, outputsize=2000)
-    # model.run()
+    model = StockPredictionModel(training_symbols, testing_symbols, technical_indicators, outputsize=2000)
+    model.run()
