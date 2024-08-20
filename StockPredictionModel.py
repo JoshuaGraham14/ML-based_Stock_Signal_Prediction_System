@@ -26,8 +26,8 @@ class StockPredictionModel:
         """
         combined_df = pd.DataFrame()
         for symbol in stock_symbols:
-            stock_utils = StockUtils(symbol=symbol, outputsize=self.outputsize)
-            df = stock_utils.get_indicators(self.technical_indicators)
+            stock_utils = StockUtils(symbol=symbol)
+            df = stock_utils.get_indicators(self.technical_indicators, outputsize=self.outputsize)
             df['symbol'] = symbol  # Add a column to identify the stock
             combined_df = pd.concat([combined_df, df], ignore_index=True)
         return combined_df
@@ -209,8 +209,8 @@ class StockPredictionModel:
 
         for index, symbol in enumerate(self.testing_symbols):
             print(f"Processing stock: {symbol}")
-            stock_utils_new = StockUtils(symbol=symbol, outputsize=self.outputsize)
-            df_new_stock = stock_utils_new.get_indicators(self.technical_indicators)
+            stock_utils_new = StockUtils(symbol=symbol)
+            df_new_stock = stock_utils_new.get_indicators(self.technical_indicators, outputsize=self.outputsize)
             df_predictions = self.evaluate_model(df_new_stock)  # Evaluate model with the new prediction logic
             # df_predictions = self.filter_predictions(df_predictions, window=0)
             self.plot_stock_predictions(axs, df_predictions, symbol, index)

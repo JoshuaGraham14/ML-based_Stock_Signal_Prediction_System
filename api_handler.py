@@ -7,6 +7,7 @@ class APIHandler:
         """
         Initialize the APIHandler with the provided API key.
         """
+        self.api_key = api_key
         self.td_client = TDClient(apikey=self.api_key)
 
     def make_api_call(self, call_function, symbol):

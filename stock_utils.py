@@ -12,7 +12,10 @@ from sklearn.linear_model import LinearRegression
 from api_handler import APIHandler
 
 class StockUtils:
-    def __init__(self, symbol, interval="1day", outputsize=5000, config_path='config.json', json_dir='stock_data', min_max_order=10):
+    # Define the list of technical indicators as a class property
+    technical_indicators = ["normalized_value", "2_reg", "3_reg", "5_reg", "10_reg", "20_reg", "50_reg", "adx", "ema", "sma", "rsi", "percent_b"]
+
+    def __init__(self, symbol, interval="1day", config_path='config.json', json_dir='stock_data'):
         """
         Initialize the StockUtils class with stock parameters and API handler.
         """
@@ -22,8 +25,7 @@ class StockUtils:
         os.makedirs(self.json_dir, exist_ok=True)
         self.symbol = symbol
         self.interval = interval
-        self.outputsize = outputsize
-        self.min_max_order = min_max_order
+        self.outputsize = 5000
         self.df = None
 
         self.get_stock()
@@ -144,12 +146,12 @@ class StockUtils:
         """
         self.df['normalized_value'] = self.df.apply(lambda x: self.normalized_values(x['high'], x['low'], x['close']), axis=1)
 
-    def get_max_min(self):
+    def get_max_min(self, min_max_order):
         """
         Identify local minima and maxima in the stock data.
         """
-        self.df['loc_min'] = self.df.iloc[argrelextrema(self.df['close'].values, np.less_equal, order=self.min_max_order)[0]]['close']
-        self.df['loc_max'] = self.df.iloc[argrelextrema(self.df['close'].values, np.greater_equal, order=self.min_max_order)[0]]['close']
+        self.df['loc_min'] = self.df.iloc[argrelextrema(self.df['close'].values, np.less_equal, order=min_max_order)[0]]['close']
+        self.df['loc_max'] = self.df.iloc[argrelextrema(self.df['close'].values, np.greater_equal, order=min_max_order)[0]]['close']
         
         self.idx_with_mins = np.where(self.df['loc_min'] > 0)[0]
         self.idx_with_maxs = np.where(self.df['loc_max'] > 0)[0]
@@ -229,27 +231,29 @@ class StockUtils:
         sma = self.api_handler.make_api_call(fetch_sma, symbol=self.symbol)
         self.df['sma'] = sma['sma'].values
 
-    def calculate_all_indicators(self, scale_features=False):
+    def calculate_all_indicators(self):
         """
-        Calculate all possible indicators and store them in the DataFrame.
+        Calculate all indicators listed in the class property and store them in the DataFrame.
         This method will be used to pre-calculate indicators when fetching stock data.
         """
-        self.get_max_min()
-        self.get_normalized()
+        if "normalized_value" in self.technical_indicators:
+            self.get_normalized()
         
-        # Automatically detect all possible regression days from the existing indicator methods
-        regression_days = self.extract_regression_days()
+        # Automatically detect and calculate all regression days based on the indicators list
+        regression_days = [int(ind.split('_')[0]) for ind in self.technical_indicators if ind.endswith('_reg')]
         for n in regression_days:
             self.n_day_regression(n)
         
-        self.get_adx()
-        self.get_ema()
-        self.get_sma()
-        self.get_percent_b()
-        self.get_rsi()
-
-        if scale_features:
-            self.scale_features()
+        if "adx" in self.technical_indicators:
+            self.get_adx()
+        if "ema" in self.technical_indicators:
+            self.get_ema()
+        if "sma" in self.technical_indicators:
+            self.get_sma()
+        if "percent_b" in self.technical_indicators:
+            self.get_percent_b()
+        if "rsi" in self.technical_indicators:
+            self.get_rsi()
 
     def extract_regression_days(self):
         """
@@ -261,41 +265,36 @@ class StockUtils:
                 regression_days.append(int(attr.split('_')[0]))
         return sorted(set(regression_days))
 
-    def get_indicators(self, technical_indicators):
+    def get_indicators(self, technical_indicators, outputsize=5000, min_max_order=10, scale_features=False):
         """
-        Return specified indicators for the stock data.
-        If the requested indicators are not calculated, they will be calculated on the fly.
+        Return the DataFrame with the specified indicators, including "date", "open", "high", "low", "close", "volume", 
+        "loc_min", and "loc_max". If any of the requested indicators are not valid, throw an error.
+        This function also calculates local minima and maxima and scales the data if required.
         """
-        # Identify missing indicators that are not in the current DataFrame
-        missing_indicators = [ind for ind in technical_indicators if ind not in self.df.columns]
+        # List of columns that should always be included
+        required_columns = ["date", "open", "high", "low", "close", "volume", "loc_min", "loc_max"]
         
-        # Calculate missing indicators if necessary
-        if missing_indicators:
-            if "normalized_value" in missing_indicators:
-                self.get_normalized()
-            regression_days = [int(ind.split('_')[0]) for ind in missing_indicators if ind.endswith('_reg')]
-            if regression_days:
-                for n in regression_days:
-                    self.n_day_regression(n)
-            if "adx" in missing_indicators:
-                self.get_adx()
-            if "ema" in missing_indicators:
-                self.get_ema()
-            if "percent_b" in missing_indicators:
-                self.get_percent_b()
-            if "rsi" in missing_indicators:
-                self.get_rsi()
-            if "sma" in missing_indicators:
-                self.get_sma()
-            
-            # Save the updated DataFrame with the new indicators to JSON
-            today = datetime.now().strftime('%Y%m%d')
-            json_filename = f'{self.symbol}_{today}_{self.interval}_{self.outputsize}.json'
-            json_filepath = os.path.join(self.json_dir, json_filename)
-            self.df.to_json(json_filepath, orient='split')
-            print(f"Updated DataFrame with new indicators saved to {json_filepath}")
+        # Validate requested indicators
+        for indicator in technical_indicators:
+            if indicator not in self.technical_indicators:
+                raise ValueError(f"Invalid technical indicator requested: {indicator}")
 
-        return self.df
+        # Ensure all requested indicators are in the DataFrame
+        missing_indicators = [ind for ind in technical_indicators if ind not in self.df.columns]
+        if missing_indicators:
+            raise ValueError(f"The following indicators are missing from the DataFrame: {', '.join(missing_indicators)}")
+
+        # Call get_max_min to calculate local minima and maxima with the provided min_max_order
+        self.get_max_min(min_max_order=min_max_order)
+
+        # Optionally scale the features before returning the DataFrame
+        if scale_features:
+            self.scale_features()
+
+        self.df = self.df.head(outputsize)
+
+        # Return the DataFrame with the required columns and the requested indicators
+        return self.df[required_columns + technical_indicators]
     
     def scale_features(self):
         """
