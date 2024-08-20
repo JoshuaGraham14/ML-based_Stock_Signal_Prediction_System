@@ -1,19 +1,23 @@
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.signal import argrelextrema
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler, PowerTransformer
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 from sklearn.linear_model import LinearRegression
-from twelvedata import TDClient
+
+from api_handler import APIHandler
 
 class StockUtils:
     def __init__(self, symbol, interval="1day", outputsize=5000, config_path='config.json', json_dir='stock_data', min_max_order=10):
+        """
+        Initialize the StockUtils class with stock parameters and API handler.
+        """
         self.api_key = self.load_api_key(config_path)
-        self.td_client = TDClient(apikey=self.api_key)
+        self.api_handler = APIHandler(self.api_key)
         self.json_dir = json_dir
         os.makedirs(self.json_dir, exist_ok=True)
         self.symbol = symbol
@@ -21,11 +25,13 @@ class StockUtils:
         self.outputsize = outputsize
         self.min_max_order = min_max_order
         self.df = None
-        self.api_call_count = 0
 
         self.get_stock()
 
     def __str__(self):
+        """
+        Return a string representation of the StockUtils instance.
+        """
         return f"StockUtils(symbol={self.symbol}, interval={self.interval}, outputsize={self.outputsize})"
 
     def load_api_key(self, config_path):
@@ -35,26 +41,26 @@ class StockUtils:
         with open(config_path) as config_file:
             config = json.load(config_file)
         return config['api_key']
-    
-    def track_api_call(self, fetch_data_string):
-        """
-        Increment the API call counter and print the fetch message.
-        """
-        self.api_call_count += 1
-        print(f"Making API call to fetch {fetch_data_string}... (API call count: {self.api_call_count})")
 
     def fetch_and_save_stock_data(self, json_filepath):
         """
-        Helper function to fetch stock data and save the DataFrame with calculated indicators.
+        Fetch stock data from API and save it to a JSON file.
         """
-        self.track_api_call(f"stock data for {self.symbol}")
-        ts = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).as_json()
+        def fetch_stock_data():
+            return self.api_handler.td_client.time_series(
+                symbol=self.symbol, 
+                interval=self.interval, 
+                outputsize=self.outputsize
+            ).as_json()
+
+        # Pass the symbol to the make_api_call method
+        ts = self.api_handler.make_api_call(fetch_stock_data, symbol=self.symbol)
         data = self.transform_to_candle_list(ts)
         self.df = pd.DataFrame(data['candles'])
 
         # Convert 'date' to datetime if needed
         self.df['date'] = pd.to_datetime(self.df['date'], format='%d/%m/%Y')
-        
+
         self.calculate_all_indicators()  # Calculate and store all indicators
 
         # Save the DataFrame to JSON
@@ -90,7 +96,6 @@ class StockUtils:
         """
         candle_list = {"candles": []}
         for item in data:
-            # Format the date to "05/08/2024" instead of "12\/08\/2024"
             formatted_date = datetime.strptime(item['datetime'], "%Y-%m-%d").strftime("%d/%m/%Y")
             candle = {
                 "date": formatted_date,
@@ -113,7 +118,7 @@ class StockUtils:
 
     def n_day_regression(self, n):
         """
-        n day regression for every data point.
+        Perform n-day linear regression for each data point.
         """
         var_name = f'{n}_reg'
         self.df[var_name] = np.nan
@@ -151,45 +156,80 @@ class StockUtils:
 
     def get_adx(self):
         """
-        Fetch ADX indicator data and add it to the DataFrame.
+        Fetch and return ADX indicator data.
         """
-        self.track_api_call(f"ADX indicator for {self.symbol}")
-        adx = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).with_adx().as_pandas()
+        def fetch_adx():
+            return self.api_handler.td_client.time_series(
+                symbol=self.symbol, 
+                interval=self.interval, 
+                outputsize=self.outputsize
+            ).with_adx().as_pandas()
+
+        # Pass the symbol to the make_api_call method
+        adx = self.api_handler.make_api_call(fetch_adx, symbol=self.symbol)
         self.df['adx'] = adx['adx'].values
 
     def get_ema(self, time_period=20):
         """
-        Fetch EMA indicator data and add it to the DataFrame.
+        Fetch and return EMA indicator data.
         """
-        self.track_api_call(f"EMA indicator for {self.symbol} with time period {time_period}")
-        ema = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).with_ema(time_period=time_period).as_pandas()
+        def fetch_ema():
+            return self.api_handler.td_client.time_series(
+                symbol=self.symbol, 
+                interval=self.interval, 
+                outputsize=self.outputsize
+            ).with_ema(time_period=time_period).as_pandas()
+
+        # Pass the symbol to the make_api_call method
+        ema = self.api_handler.make_api_call(fetch_ema, symbol=self.symbol)
         self.df['ema'] = ema['ema'].values
 
     def get_percent_b(self):
         """
-        Fetch Percent B indicator data and add it to the DataFrame.
+        Fetch and return Percent B indicator data.
         """
-        self.track_api_call(f"Percent B indicator for {self.symbol}")
-        percent_b = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).with_percent_b().as_pandas()
+        def fetch_percent_b():
+            return self.api_handler.td_client.time_series(
+                symbol=self.symbol,
+                interval=self.interval,
+                outputsize=self.outputsize
+            ).with_percent_b().as_pandas()
+
+        # Pass the symbol to the make_api_call method
+        percent_b = self.api_handler.make_api_call(fetch_percent_b, symbol=self.symbol)
         self.df['percent_b'] = percent_b['percent_b'].values
 
     def get_rsi(self):
         """
-        Fetch RSI indicator data and add it to the DataFrame.
+        Fetch and return RSI indicator data.
         """
-        self.track_api_call(f"RSI indicator for {self.symbol}")
-        rsi = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).with_rsi().as_pandas()
+        def fetch_rsi():
+            return self.api_handler.td_client.time_series(
+                symbol=self.symbol,
+                interval=self.interval,
+                outputsize=self.outputsize
+            ).with_rsi().as_pandas()
+
+        # Pass the symbol to the make_api_call method
+        rsi = self.api_handler.make_api_call(fetch_rsi, symbol=self.symbol)
         self.df['rsi'] = rsi['rsi'].values
 
     def get_sma(self, time_period=20):
         """
-        Fetch SMA indicator data and add it to the DataFrame.
+        Fetch and return SMA indicator data.
         """
-        self.track_api_call(f"SMA indicator for {self.symbol} with time period {time_period}")
-        sma = self.td_client.time_series(symbol=self.symbol, interval=self.interval, outputsize=self.outputsize).with_sma(time_period=time_period).as_pandas()
+        def fetch_sma():
+            return self.api_handler.td_client.time_series(
+                symbol=self.symbol,
+                interval=self.interval,
+                outputsize=self.outputsize
+            ).with_sma(time_period=time_period).as_pandas()
+
+        # Pass the symbol to the make_api_call method
+        sma = self.api_handler.make_api_call(fetch_sma, symbol=self.symbol)
         self.df['sma'] = sma['sma'].values
 
-    def calculate_all_indicators(self):
+    def calculate_all_indicators(self, scale_features=False):
         """
         Calculate all possible indicators and store them in the DataFrame.
         This method will be used to pre-calculate indicators when fetching stock data.
@@ -205,11 +245,11 @@ class StockUtils:
         self.get_adx()
         self.get_ema()
         self.get_sma()
-        # self.get_percent_b()
-        # self.get_rsi()
+        self.get_percent_b()
+        self.get_rsi()
 
-        # Apply scaling to each feature individually
-        # self.scale_features()
+        if scale_features:
+            self.scale_features()
 
     def extract_regression_days(self):
         """
