@@ -12,11 +12,28 @@ import seaborn as sns
 from stock_utils import StockUtils
 
 class StockPredictionModel:
-    def __init__(self, training_symbols, testing_symbols, technical_indicators, outputsize=5000):
+    def __init__(self, training_symbols, testing_symbols, technical_indicators, params):
+        """
+        Initialize the StockPredictionModel class.
+        
+        Args:
+        - training_symbols: List of stock symbols for training.
+        - testing_symbols: List of stock symbols for testing.
+        - technical_indicators: List of technical indicators to use.
+        - params: Dictionary of parameters including 'outputsize', 'min_max_order', 'min_threshold',
+                  'max_threshold', and 'window_size'.
+        """
         self.training_symbols = training_symbols
         self.testing_symbols = testing_symbols
         self.technical_indicators = technical_indicators
-        self.outputsize = outputsize
+        
+        # Parameters
+        self.outputsize = params.get('outputsize', 5000)
+        self.min_max_order = params.get('min_max_order', 5)
+        self.min_threshold = params.get('min_threshold', 0.00001)
+        self.max_threshold = params.get('max_threshold', 0.99999)
+        self.window_size = params.get('window_size', 5)
+
         self.model = None
         self.scaler = StandardScaler()
     
@@ -27,7 +44,7 @@ class StockPredictionModel:
         combined_df = pd.DataFrame()
         for symbol in stock_symbols:
             stock_utils = StockUtils(symbol=symbol)
-            df = stock_utils.get_indicators(self.technical_indicators, outputsize=self.outputsize)
+            df = stock_utils.get_indicators(self.technical_indicators, outputsize=self.outputsize, min_max_order=self.min_max_order)
             df['symbol'] = symbol  # Add a column to identify the stock
             combined_df = pd.concat([combined_df, df], ignore_index=True)
         return combined_df
@@ -60,7 +77,7 @@ class StockPredictionModel:
             coef_df.sort_values(by='Coefficient', ascending=False, inplace=True)
             bars = ax.barh(coef_df['Feature'], coef_df['Coefficient'], color=coef_df['Color'])
             ax.set_xlabel('Coefficient Value')
-            ax.set_title('Feature Coefficients')
+            ax.setTitle('Feature Coefficients')
 
             cbar = plt.colorbar(sm, ax=ax)
             cbar.set_label('Coefficient Value')
@@ -90,7 +107,7 @@ class StockPredictionModel:
         self.model = model
         return model
 
-    def evaluate_model(self, df, min_threshold=0.00001, max_threshold=0.99999):
+    def evaluate_model(self, df):
         """
         Evaluate the model on the entire DataFrame and add predictions.
         Predicts 0 (minima) if the smoothed predicted probability is less than min_threshold.
@@ -109,10 +126,10 @@ class StockPredictionModel:
         y_pred = -1 * np.ones_like(y_pred_proba)
 
         # Predict minima
-        y_pred[y_pred_proba < min_threshold] = 0
+        y_pred[y_pred_proba < self.min_threshold] = 0
 
         # Predict maxima
-        y_pred[y_pred_proba > max_threshold] = 1
+        y_pred[y_pred_proba > self.max_threshold] = 1
 
         df_clean = df_clean.copy()  # Ensure we are working on a copy to avoid warnings
         df_clean['predicted_target'] = y_pred
@@ -123,13 +140,13 @@ class StockPredictionModel:
 
         return df
 
-    def plot_stock_predictions(self, axs, df, stock_symbol, index):
+    def plot_stock_predictions(self, axs, df_new_stock, df, stock_symbol, index):
         """
         Plot the stock price and predictions for a given stock symbol.
         """
-        df['date'] = pd.to_datetime(df['date'], format='%d/%m/%Y')
-        x = df['date']
-        y = df["close"]
+        df_new_stock['date'] = pd.to_datetime(df_new_stock['date'], format='%d/%m/%Y')
+        x = df_new_stock['date']
+        y = df_new_stock["close"]
         axs[index].plot(x, y, ls='-', color="black", label=f"{stock_symbol} Daily")
 
         # Plot predicted minima
@@ -139,10 +156,6 @@ class StockPredictionModel:
         # Plot predicted maxima
         maxima_points = df[df['predicted_target'] == 1]
         axs[index].scatter(maxima_points['date'], maxima_points['close'], marker='o', color="blue", label="Predicted Maxima", s=50)
-
-        # # Plot neutral points (neither minima nor maxima)
-        # neutral_points = df[df['predicted_target'] == -1]
-        # axs[index].scatter(neutral_points['date'], neutral_points['close'], marker='o', color="gray", label="Neutral Points", s=50, alpha=0.5)
 
         # Plot true minima (if available in the df)
         axs[index].scatter(df['date'], df.get('loc_min', pd.Series()), marker='x', color="red", label="True Minima", s=20)
@@ -157,14 +170,10 @@ class StockPredictionModel:
         axs[index].tick_params(axis='x', rotation=45)
         axs[index].grid(True)
 
-    def filter_predictions(self, df, window=5):
+    def filter_predictions(self, df):
         """
         Filter out predicted minima and maxima that are too close to each other.
         
-        Parameters:
-        - df: DataFrame containing at least ['date', 'predicted_target'].
-        - window: The number of days within which only one prediction (minima or maxima) should be kept.
-
         Returns:
         - Filtered DataFrame with closely spaced predictions removed.
         """
@@ -175,17 +184,17 @@ class StockPredictionModel:
         keep_indices = []
 
         # Last recorded minima/maxima positions
-        last_minima_idx = -window - 1
-        last_maxima_idx = -window - 1
+        last_minima_idx = -self.window_size - 1
+        last_maxima_idx = -self.window_size - 1
 
         for idx, row in df.iterrows():
             if row['predicted_target'] == 0:  # Minima
-                if idx - last_minima_idx > window:
+                if idx - last_minima_idx > self.window_size:
                     keep_indices.append(idx)
                     last_minima_idx = idx
 
             elif row['predicted_target'] == 1:  # Maxima
-                if idx - last_maxima_idx > window:
+                if idx - last_maxima_idx > self.window_size:
                     keep_indices.append(idx)
                     last_maxima_idx = idx
 
@@ -210,12 +219,13 @@ class StockPredictionModel:
         for index, symbol in enumerate(self.testing_symbols):
             print(f"Processing stock: {symbol}")
             stock_utils_new = StockUtils(symbol=symbol)
-            df_new_stock = stock_utils_new.get_indicators(self.technical_indicators, outputsize=self.outputsize)
-            df_predictions = self.evaluate_model(df_new_stock)  # Evaluate model with the new prediction logic
-            # df_predictions = self.filter_predictions(df_predictions, window=0)
-            self.plot_stock_predictions(axs, df_predictions, symbol, index)
+            df_new_stock = stock_utils_new.get_indicators(self.technical_indicators, outputsize=self.outputsize, min_max_order=self.min_max_order)
+            df_predictions = self.evaluate_model(df_new_stock)
+            df_predictions = self.filter_predictions(df_predictions)
+            self.plot_stock_predictions(axs, df_new_stock, df_predictions, symbol, index)
 
         plt.tight_layout()
         plt.show()
 
         return df_predictions
+    

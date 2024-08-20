@@ -25,8 +25,16 @@ if __name__ == "__main__":
 
     # Example usage
     training_symbols = ['AAPL', 'WMT', 'MSFT', 'MA', 'AMZN', 'META', 'TSLA', 'SPX', 'GOOG', 'NFLX']
-    testing_symbols = ['NFLX', 'GOOG']
-    technical_indicators = ["normalized_value", "2_reg", "3_reg", "5_reg", "10_reg", "20_reg", "50_reg", "adx", "ema", "sma"]
+    testing_symbols = ['GOOG']
+    technical_indicators = ["normalized_value", "2_reg", "3_reg", "5_reg", "10_reg", "20_reg", "50_reg", "adx", "ema", "sma", "rsi", "percent_b"]
+    
+    params = {
+        'outputsize': 2000,
+        'min_max_order': 10,
+        'min_threshold': 0.0001,
+        'max_threshold': 0.9999,
+        'window_size': 2
+    }
 
-    model = StockPredictionModel(training_symbols, testing_symbols, technical_indicators, outputsize=2000)
+    model = StockPredictionModel(training_symbols, testing_symbols, technical_indicators, params)
     model.run()
