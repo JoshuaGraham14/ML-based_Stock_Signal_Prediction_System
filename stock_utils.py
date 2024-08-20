@@ -1,16 +1,17 @@
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.signal import argrelextrema
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler, PowerTransformer
 from sklearn.linear_model import LinearRegression
 from twelvedata import TDClient
 
 class StockUtils:
-    def __init__(self, symbol, interval="1day", outputsize=5000, config_path='config.json', json_dir='stock_data'):
+    def __init__(self, symbol, interval="1day", outputsize=5000, config_path='config.json', json_dir='stock_data', min_max_order=10):
         self.api_key = self.load_api_key(config_path)
         self.td_client = TDClient(apikey=self.api_key)
         self.json_dir = json_dir
@@ -18,6 +19,7 @@ class StockUtils:
         self.symbol = symbol
         self.interval = interval
         self.outputsize = outputsize
+        self.min_max_order = min_max_order
         self.df = None
         self.api_call_count = 0
 
@@ -137,12 +139,12 @@ class StockUtils:
         """
         self.df['normalized_value'] = self.df.apply(lambda x: self.normalized_values(x['high'], x['low'], x['close']), axis=1)
 
-    def get_max_min(self, order=10):
+    def get_max_min(self):
         """
         Identify local minima and maxima in the stock data.
         """
-        self.df['loc_min'] = self.df.iloc[argrelextrema(self.df['close'].values, np.less_equal, order=order)[0]]['close']
-        self.df['loc_max'] = self.df.iloc[argrelextrema(self.df['close'].values, np.greater_equal, order=order)[0]]['close']
+        self.df['loc_min'] = self.df.iloc[argrelextrema(self.df['close'].values, np.less_equal, order=self.min_max_order)[0]]['close']
+        self.df['loc_max'] = self.df.iloc[argrelextrema(self.df['close'].values, np.greater_equal, order=self.min_max_order)[0]]['close']
         
         self.idx_with_mins = np.where(self.df['loc_min'] > 0)[0]
         self.idx_with_maxs = np.where(self.df['loc_max'] > 0)[0]
@@ -202,9 +204,12 @@ class StockUtils:
         
         self.get_adx()
         self.get_ema()
+        self.get_sma()
         # self.get_percent_b()
         # self.get_rsi()
-        self.get_sma()
+
+        # Apply scaling to each feature individually
+        # self.scale_features()
 
     def extract_regression_days(self):
         """
@@ -251,6 +256,28 @@ class StockUtils:
             print(f"Updated DataFrame with new indicators saved to {json_filepath}")
 
         return self.df
+    
+    def scale_features(self):
+        """
+        Scale each feature individually using the most appropriate scaler.
+        """
+        scalers = {
+            'normalized_value': MinMaxScaler(),
+            'adx': MinMaxScaler(),
+            'ema': StandardScaler(),
+            'sma': StandardScaler()
+        }
+
+        # Apply RobustScaler to all regression features (e.g., '2_reg', '3_reg', etc.)
+        regression_columns = [col for col in self.df.columns if col.endswith('_reg')]
+        for col in regression_columns:
+            scaler = RobustScaler()
+            self.df[col] = scaler.fit_transform(self.df[[col]])
+
+        # Apply scalers to specific features
+        for feature, scaler in scalers.items():
+            if feature in self.df.columns:
+                self.df[feature] = scaler.fit_transform(self.df[[feature]])
 
     def plot_graph(self, show_mins=True, show_maxs=True):
         """

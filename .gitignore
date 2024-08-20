@@ -1,4 +1,5 @@
 todo.txt
+stock_data/
 
 # Ignore Python bytecode files
 __pycache__/

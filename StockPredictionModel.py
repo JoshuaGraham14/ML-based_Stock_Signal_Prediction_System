@@ -1,5 +1,6 @@
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report
@@ -77,6 +78,7 @@ class StockPredictionModel:
 
         # Train on all available data
         model = LogisticRegression(random_state=16)
+        # model = RandomForestClassifier(random_state=16, n_estimators=100)
         model.fit(X, y)
         
         if show_intercept:
@@ -88,11 +90,11 @@ class StockPredictionModel:
         self.model = model
         return model
 
-    def evaluate_model(self, df, min_threshold=0.001, max_threshold=0.999):
+    def evaluate_model(self, df, min_threshold=0.00001, max_threshold=0.99999):
         """
         Evaluate the model on the entire DataFrame and add predictions.
-        Predicts 0 (minima) if the predicted probability is less than min_threshold.
-        Predicts 1 (maxima) if the predicted probability is greater than max_threshold.
+        Predicts 0 (minima) if the smoothed predicted probability is less than min_threshold.
+        Predicts 1 (maxima) if the smoothed predicted probability is greater than max_threshold.
         Anything in between is considered neutral (i.e., no prediction).
         """
         df_clean = df.dropna(subset=self.technical_indicators)
@@ -102,13 +104,13 @@ class StockPredictionModel:
         X = self.scaler.fit_transform(X)
 
         y_pred_proba = self.model.predict_proba(X)[:, 1]
-        
+
         # Initialize predictions with a neutral value, such as None or -1
         y_pred = -1 * np.ones_like(y_pred_proba)
-        
+
         # Predict minima
         y_pred[y_pred_proba < min_threshold] = 0
-        
+
         # Predict maxima
         y_pred[y_pred_proba > max_threshold] = 1
 
@@ -155,6 +157,43 @@ class StockPredictionModel:
         axs[index].tick_params(axis='x', rotation=45)
         axs[index].grid(True)
 
+    def filter_predictions(self, df, window=5):
+        """
+        Filter out predicted minima and maxima that are too close to each other.
+        
+        Parameters:
+        - df: DataFrame containing at least ['date', 'predicted_target'].
+        - window: The number of days within which only one prediction (minima or maxima) should be kept.
+
+        Returns:
+        - Filtered DataFrame with closely spaced predictions removed.
+        """
+        # Ensure that the DataFrame is sorted by date
+        df = df.sort_values(by='date').reset_index(drop=True)
+
+        # Initialize a list to store indices of rows to keep
+        keep_indices = []
+
+        # Last recorded minima/maxima positions
+        last_minima_idx = -window - 1
+        last_maxima_idx = -window - 1
+
+        for idx, row in df.iterrows():
+            if row['predicted_target'] == 0:  # Minima
+                if idx - last_minima_idx > window:
+                    keep_indices.append(idx)
+                    last_minima_idx = idx
+
+            elif row['predicted_target'] == 1:  # Maxima
+                if idx - last_maxima_idx > window:
+                    keep_indices.append(idx)
+                    last_maxima_idx = idx
+
+        # Filter the DataFrame
+        filtered_df = df.loc[keep_indices].reset_index(drop=True)
+
+        return filtered_df
+
     def run(self):
         """
         Run the complete pipeline: gather data, train the model, and visualize predictions.
@@ -173,7 +212,10 @@ class StockPredictionModel:
             stock_utils_new = StockUtils(symbol=symbol, outputsize=self.outputsize)
             df_new_stock = stock_utils_new.get_indicators(self.technical_indicators)
             df_predictions = self.evaluate_model(df_new_stock)  # Evaluate model with the new prediction logic
+            # df_predictions = self.filter_predictions(df_predictions, window=0)
             self.plot_stock_predictions(axs, df_predictions, symbol, index)
 
         plt.tight_layout()
         plt.show()
+
+        return df_predictions
