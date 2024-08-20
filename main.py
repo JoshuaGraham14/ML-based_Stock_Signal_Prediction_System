@@ -21,15 +21,15 @@ def fetch_indicators_for_symbols():
         print(f"Fetched indicators for {symbol}")
 
 if __name__ == "__main__":
-    # fetch_indicators_for_symbols()
+    fetch_indicators_for_symbols()
 
     # Example usage
-    training_symbols = ['AAPL', 'WMT', 'MSFT', 'MA', 'AMZN', 'META', 'TSLA', 'SPX', 'GOOG', 'NFLX']
-    testing_symbols = ['GOOG']
+    training_symbols = ['AAPL', 'WMT', 'MSFT', 'MA', 'AMZN', 'META', 'TSLA', 'GS', 'SPX', 'GOOG', 'NFLX']
+    testing_symbols = ['NFLX']
     technical_indicators = ["normalized_value", "2_reg", "3_reg", "5_reg", "10_reg", "20_reg", "50_reg", "adx", "ema", "sma", "rsi", "percent_b"]
     
     params = {
-        'outputsize': 2000,
+        'outputsize': 1200,
         'min_max_order': 10,
         'min_threshold': 0.0001,
         'max_threshold': 0.9999,

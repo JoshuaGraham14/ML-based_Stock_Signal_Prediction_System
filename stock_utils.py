@@ -122,14 +122,20 @@ class StockUtils:
         """
         Perform n-day linear regression for each data point.
         """
+        # Reverse the DataFrame to get the data in chronological order
+        df_reversed = self.df[::-1].reset_index(drop=True)
+        
         var_name = f'{n}_reg'
-        self.df[var_name] = np.nan
+        df_reversed[var_name] = np.nan
 
-        for idx in range(n, len(self.df)):
-            y = self.df['close'][idx - n: idx].to_numpy().reshape(-1, 1)
+        for idx in range(n, len(df_reversed)):
+            y = df_reversed['close'][idx - n: idx].to_numpy().reshape(-1, 1)
             x = np.arange(0, n).reshape(-1, 1)
             coef = self.linear_regression(x, y)
-            self.df.loc[idx, var_name] = coef
+            df_reversed.loc[idx, var_name] = coef
+
+        # Reverse the DataFrame back to the original order
+        self.df[var_name] = df_reversed[var_name][::-1].reset_index(drop=True)
 
     def normalized_values(self, high, low, close):
         """
