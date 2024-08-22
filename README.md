@@ -8,6 +8,20 @@ This repository contains a machine learning-based system designed to predict buy
 - **Visualisation:** Provides tools to visualise stock trends and model predictions using Matplotlib and Seaborn, enhancing decision-making.
 - **Extensibility:** Easily adaptable for different stocks and trading intervals.
 
+## Example Usage
+
+This image shows the predictions made by the machine learning model for GOOG (Google), where the machine learning model's predictions for buy/sell signals are overlaid on the actual stock price movement. 
+
+The chart displays:
+- **Black Line:** The daily closing prices.
+- **Green Circles:** Predicted minima (buy signals)
+- **Blue Circles:** Predicted maxima (sell signals)
+- **Red Crosses:** True minima
+- **Orange Crosses:** True maxima
+
+<img width="1501" alt="Screenshot 2024-08-23 at 00 55 41" src="https://github.com/user-attachments/assets/4e96d5fa-1311-4b6c-a72f-7036b8155ced">
+
+
 ## Installation
 
 1. Clone the repository:
@@ -37,3 +51,9 @@ This repository contains a machine learning-based system designed to predict buy
 
 3. **Make Predictions:**
    - Apply the trained model to predict future minima and maxima points, guiding trading decisions.
+
+## Project Structure
+- `main.py`: Entry point of the application, managing data fetching and invoking the model.
+- `StockPredictionModel.py`: Contains the logistic regression model for classifying stock signals.
+- `api_handler.py`: Handles API calls to fetch stock data with error handling and caching.
+- `stock_utils.py`: Provides utilities for processing stock data and computing technical indicators.
