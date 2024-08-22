@@ -45,7 +45,10 @@ class StockPredictionModel:
         for symbol in stock_symbols:
             stock_utils = StockUtils(symbol=symbol)
             df = stock_utils.get_indicators(self.technical_indicators, outputsize=self.outputsize, min_max_order=self.min_max_order)
-            df['symbol'] = symbol  # Add a column to identify the stock
+
+            df = df.copy()
+            df.loc[:, 'symbol'] = symbol
+            
             combined_df = pd.concat([combined_df, df], ignore_index=True)
         return combined_df
 
