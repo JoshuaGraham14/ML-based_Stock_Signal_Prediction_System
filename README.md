@@ -8,7 +8,7 @@ This repository contains a machine learning-based system designed to predict buy
 - **Visualisation:** Provides tools to visualise stock trends and model predictions using Matplotlib and Seaborn, enhancing decision-making.
 - **Extensibility:** Easily adaptable for different stocks and trading intervals.
 
-## Example Usage
+## Example 
 
 This image shows the predictions made by the machine learning model for GOOG (Google), where the machine learning model's predictions for buy/sell signals are overlaid on the actual stock price movement. 
 
