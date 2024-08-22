@@ -3,7 +3,7 @@ This repository contains a machine learning-based system designed to predict buy
 
 ## Features
 - **Data Collection:** Fetches stock data using the Twelve Data API, using a custom API handler, with integrated caching and data processing capabilities.
-- **Technical Indicators:** Computes and fetches over 10 technical indicators (e.g., EMA, RSI and n day regressions) as features for model training. 
+- **Technical Indicators:** Computes and fetches over 10 technical indicators (e.g., EMA, RSI and n-day regressions) as features for model training. 
 - **Stock Signal Classification:** Uses logistic regression to classify stock price points as local minima or maxima, generating actionable buy/sell signals.
 - **Visualisation:** Provides tools to visualise stock trends and model predictions using Matplotlib and Seaborn, enhancing decision-making.
 - **Extensibility:** Easily adaptable for different stocks and trading intervals.
