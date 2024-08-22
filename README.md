@@ -31,11 +31,9 @@ This repository contains a machine learning-based system designed to predict buy
 
 1. **Fetch and Analyze Stock Data:**
    - Use the `main.py` script to fetch stock data and calculate technical indicators.
-   - Uncomment the relevant lines to fetch data and plot results.
 
 2. **Train and Test the Model:**
    - Utilise the `StockPredictionModel` class to train a logistic regression model on selected stock symbols.
-   - Test the model to identify potential buy/sell signals.
 
 3. **Make Predictions:**
    - Apply the trained model to predict future minima and maxima points, guiding trading decisions.
