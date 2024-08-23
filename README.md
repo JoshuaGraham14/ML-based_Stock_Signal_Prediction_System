@@ -35,6 +35,7 @@ The chart displays:
    ```
 3. Set up your API key:
    - Replace the `api_key` property with your Twelve Data API key in `config.json`:
+     
    ```json
    {
     "api_key": "your_twelvedata_api_key"
