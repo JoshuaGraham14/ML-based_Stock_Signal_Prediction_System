@@ -1,7 +1,6 @@
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 
 from stock_prediction.data_handling import StockUtils
