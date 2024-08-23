@@ -23,7 +23,7 @@ if __name__ == "__main__":
     # fetch_indicators_for_symbols()
 
     #Example usage
-    training_symbols = ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'TSLA', 'AMZN']
+    training_symbols = ['AAPL', 'MSFT', 'AMZN', 'NVDA', 'GOOGL', 'TSLA', 'GOOG', 'BRK.B', 'META', 'UNH', 'XOM', 'LLY', 'JPM', 'JNJ',  'PG', 'MA', 'AVGO', 'HD', 'CVX', 'MRK', 'COST', 'PEP', 'NFLX']
     testing_symbols = ['GOOG']
     technical_indicators = ["normalized_value", "2_reg", "3_reg", "5_reg", "10_reg", "20_reg", "50_reg", "adx", "ema", "sma", "rsi", "percent_b"]
     
