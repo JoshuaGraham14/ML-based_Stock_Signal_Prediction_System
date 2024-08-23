@@ -8,6 +8,20 @@ This repository contains a machine learning-based system designed to predict buy
 - **Visualisation:** Provides tools to visualise stock trends and model predictions using Matplotlib and Seaborn, enhancing decision-making.
 - **Extensibility:** Easily adaptable for different stocks and trading intervals.
 
+## Example 
+
+This image shows the predictions made by the machine learning model for GOOG (Google), where the machine learning model's predictions for buy/sell signals are overlaid on the actual stock price movement. 
+
+The chart displays:
+- **Black Line:** The daily closing prices.
+- **Green Circles:** Predicted minima (buy signals)
+- **Blue Circles:** Predicted maxima (sell signals)
+- **Red Crosses:** True minima
+- **Orange Crosses:** True maxima
+
+<img width="1501" alt="Screenshot 2024-08-23 at 00 55 41" src="https://github.com/user-attachments/assets/4e96d5fa-1311-4b6c-a72f-7036b8155ced">
+
+
 ## Installation
 
 1. Clone the repository:
@@ -21,19 +35,9 @@ This repository contains a machine learning-based system designed to predict buy
    ```
 3. Set up your API key:
    - Replace the `api_key` property with your Twelve Data API key in `config.json`:
-     ```json
-     {
-       "api_key": "your_twelvedata_api_key"
-     }
-     ```
-
-## Usage
-
-1. **Fetch and Analyze Stock Data:**
-   - Use the `main.py` script to fetch stock data and calculate technical indicators.
-
-2. **Train and Test the Model:**
-   - Utilise the `StockPredictionModel` class to train a logistic regression model on selected stock symbols.
-
-3. **Make Predictions:**
-   - Apply the trained model to predict future minima and maxima points, guiding trading decisions.
+     
+   ```json
+   {
+    "api_key": "your_twelvedata_api_key"
+   }
+   ```
