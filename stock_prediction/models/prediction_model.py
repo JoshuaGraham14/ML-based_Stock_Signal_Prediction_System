@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from stock_utils import StockUtils
+from stock_prediction.data_handling import StockUtils
 
 class StockPredictionModel:
     def __init__(self, training_symbols, testing_symbols, technical_indicators, params):

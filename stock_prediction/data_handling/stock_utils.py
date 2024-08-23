@@ -9,13 +9,13 @@ from scipy.signal import argrelextrema
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 from sklearn.linear_model import LinearRegression
 
-from api_handler import APIHandler
+from .api_handler import APIHandler
 
 class StockUtils:
     # Define the list of technical indicators as a class property
     technical_indicators = ["normalized_value", "2_reg", "3_reg", "5_reg", "10_reg", "20_reg", "50_reg", "adx", "ema", "sma", "rsi", "percent_b"]
 
-    def __init__(self, symbol, interval="1day", config_path='config.json', json_dir='stock_data'):
+    def __init__(self, symbol, interval="1day", config_path='config.json', json_dir='data/stock_data'):
         """
         Initialize the StockUtils class with stock parameters and API handler.
         """
