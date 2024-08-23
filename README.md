@@ -40,20 +40,3 @@ The chart displays:
        "api_key": "your_twelvedata_api_key"
      }
      ```
-
-## Usage
-
-1. **Fetch and Analyze Stock Data:**
-   - Use the `main.py` script to fetch stock data and calculate technical indicators.
-
-2. **Train and Test the Model:**
-   - Utilise the `StockPredictionModel` class to train a logistic regression model on selected stock symbols.
-
-3. **Make Predictions:**
-   - Apply the trained model to predict future minima and maxima points, guiding trading decisions.
-
-## Project Structure
-- `main.py`: Entry point of the application, managing data fetching and invoking the model.
-- `StockPredictionModel.py`: Contains the logistic regression model for classifying stock signals.
-- `api_handler.py`: Handles API calls to fetch stock data with error handling and caching.
-- `stock_utils.py`: Provides utilities for processing stock data and computing technical indicators.
