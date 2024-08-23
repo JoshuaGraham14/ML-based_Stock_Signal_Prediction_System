@@ -1,5 +1,8 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+
+from stock_prediction.data_handling import StockUtils
 
 class ModelPredictor:
     def __init__(self, model, scaler, testing_symbols, technical_indicators, params):
@@ -17,7 +20,9 @@ class ModelPredictor:
         self.scaler = scaler
         self.testing_symbols = testing_symbols
         self.technical_indicators = technical_indicators
-        
+
+        self.outputsize = params.get('outputsize', 5000)
+        self.min_max_order = params.get('min_max_order', 5)
         self.min_threshold = params.get('min_threshold', 0.00001)
         self.max_threshold = params.get('max_threshold', 0.99999)
         self.window_size = params.get('window_size', 5)
@@ -96,3 +101,32 @@ class ModelPredictor:
         axs[index].set_title(f"Predictions for {stock_symbol}")
         axs[index].tick_params(axis='x', rotation=45)
         axs[index].grid(True)
+    
+    def test(self, plot_graph=False):
+        """
+        High-level method to evaluate the model on test data and optionally plot the results.
+        """
+        fig, axs = plt.subplots(len(self.testing_symbols), 1, figsize=(12, 6 * len(self.testing_symbols)))
+
+        if len(self.testing_symbols) == 1:
+            axs = [axs]  # Ensure axs is iterable when there's only one subplot
+
+        for index, symbol in enumerate(self.testing_symbols):
+            print(f"Processing stock: {symbol}")
+            stock_utils_new = StockUtils(symbol=symbol)
+            df_new_stock = stock_utils_new.get_indicators(
+                self.technical_indicators, 
+                outputsize=self.outputsize,
+                min_max_order=self.min_max_order
+            )
+            df_predictions = self.evaluate_model(df_new_stock)
+            df_predictions = self.filter_predictions(df_predictions)
+
+            if plot_graph:
+                self.plot_stock_predictions(axs, df_new_stock, df_predictions, symbol, index)
+
+        if plot_graph:
+            plt.tight_layout()
+            plt.show()
+
+        return df_predictions

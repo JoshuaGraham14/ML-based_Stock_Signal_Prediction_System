@@ -97,3 +97,12 @@ class ModelTrainer:
             cbar = plt.colorbar(sm, ax=ax)
             cbar.set_label('Coefficient Value')
             plt.show()
+
+    def train(self):
+        """
+        High-level method to gather stock data, prepare training data, and train the model.
+        """
+        combined_df = self.gather_stock_data(self.training_symbols)
+        training_df = self.prepare_training_data(combined_df)
+        trained_model = self.train_model(training_df)
+        return trained_model
