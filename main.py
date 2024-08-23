@@ -37,3 +37,4 @@ if __name__ == "__main__":
 
     model = StockPredictionModel(training_symbols, testing_symbols, technical_indicators, params)
     model.run()
+
