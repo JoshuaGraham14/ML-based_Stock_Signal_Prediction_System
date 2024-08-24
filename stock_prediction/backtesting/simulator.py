@@ -5,62 +5,59 @@ import pandas as pd
 class Simulator:
     def __init__(self, capital):
         """
-        initialize the simulator with the capital
+        Initialize the simulator with the capital.
         """
         self.capital = capital
-        self.initial_capital = capital #keep a copy of the initial capital
+        self.initial_capital = capital  # Keep a copy of the initial capital
         self.total_gain = 0
         self.buy_orders = {}
         self.history = []
-        #create a pandas df to save history
-        cols = ['stock', 'buy_price', 'n_shares', 'sell_price', 'net_gain', 'buy_date', 'sell_date']
-        self.history_df = pd.DataFrame(columns = cols)
+        # Create a pandas df to save history
+        cols = ['stock', 'buy_price', 'n_shares', 'sell_price', 'net_gain', 'buy_date', 'sell_date', 'days_held']
+        self.history_df = pd.DataFrame(columns=cols)
            
     def buy(self, stock, buy_price, buy_date):
         """
-        function takes buy price and the number of shares and buy the stock
+        Function takes buy price and the number of shares and buys the stock.
         """
-        #calculate the procedure
+        # Calculate the procedure
         n_shares = self.buy_percentage(buy_price)
-        self.capital = self.capital - buy_price * n_shares
+        self.capital -= buy_price * n_shares  # Update capital after buying
         self.buy_orders[stock] = [buy_price, n_shares, buy_price * n_shares, buy_date]
 
     def sell(self, stock, sell_price, n_shares_sell, sell_date):
         """
-        function to sell stock given the stock name and number of shares
+        Function to sell stock given the stock name and number of shares.
         """
         buy_price, n_shares, _, buy_date = self.buy_orders[stock]
-        sell_amount = sell_price * (n_shares_sell)
+        sell_amount = sell_price * n_shares_sell
 
-        self.capital = self.capital + sell_amount
+        self.capital += sell_amount  # Update capital after selling
 
-        if (n_shares - n_shares_sell) == 0: #if sold all
-            self.history.append([stock, buy_price, n_shares, sell_price, buy_date, sell_date])
+        if (n_shares - n_shares_sell) == 0:  # If sold all
+            days_held = (sell_date - buy_date).days
+            net_gain = sell_amount - buy_price * n_shares
+            self.total_gain += net_gain  # Update total gain
+            self.history.append([stock, buy_price, n_shares, sell_price, net_gain, buy_date, sell_date, days_held])
             del self.buy_orders[stock]
         else:
             n_shares = n_shares - n_shares_sell
             self.buy_orders[stock][1] = n_shares
             self.buy_orders[stock][2] = buy_price * n_shares
 
-    def buy_percentage(self, buy_price, buy_perc = 1):
+    def buy_percentage(self, buy_price, buy_perc=1):
         """
-        this function determines how much capital to spend on the stock and returns the number of shares
+        This function determines how much capital to spend on the stock and returns the number of shares.
         """
         stock_expenditure = self.capital * buy_perc
         n_shares = math.floor(stock_expenditure / buy_price)
         return n_shares
 
-    def trailing_stop_loss(self):
-        """
-        activates a trailing stop loss
-        """
-        pass
-    
     def print_bag(self):
         """
-        print current stocks holding
+        Print current stocks holding.
         """
-        print ("{:<10} {:<10} {:<10} {:<10}".format('STOCK', 'BUY PRICE', 'SHARES', 'TOTAL VALUE'))
+        print("{:<10} {:<10} {:<10} {:<10}".format('STOCK', 'BUY PRICE', 'SHARES', 'TOTAL VALUE'))
         for key, value in self.buy_orders.items():
             print("{:<10} {:<10} {:<10} {:<10}".format(key, value[0], value[1], value[2]))
         print('\n')  
@@ -70,27 +67,28 @@ class Simulator:
         Create a summary of the trades.
         """
         if print_results:
-            print("{:<10} {:<10} {:<10} {:<10} {:<10}".format('STOCK', 'BUY PRICE', 'SHARES', 'SELL PRICE', 'NET GAIN'))
+            print("{:<10} {:<10} {:<10} {:<10} {:<10} {:<15} {:<15} {:<10}".format('STOCK', 'BUY PRICE', 'SHARES', 'SELL PRICE', 'NET GAIN', 'BUY DATE', 'SELL DATE', 'DAYS HELD'))
 
         # Store rows to add to the history DataFrame
         rows_to_add = []
 
         for values in self.history:
-            net_gain = (values[3] - values[1]) * values[2]
-            self.total_gain += net_gain
             row = {
                 'stock': values[0],
                 'buy_price': values[1],
                 'n_shares': values[2],
                 'sell_price': values[3],
-                'net_gain': net_gain,
-                'buy_date': values[4],
-                'sell_date': values[5]
+                'net_gain': values[4],
+                'buy_date': values[5],
+                'sell_date': values[6],
+                'days_held': values[7]
             }
             rows_to_add.append(row)
 
             if print_results:
-                print("{:<10} {:<10} {:<10} {:<10} {:<10}".format(values[0], values[1], values[2], values[3], np.round(net_gain, 2)))
+                print("{:<10} {:<10} {:<10} {:<10} {:<10} {:<15} {:<15} {:<10}".format(
+                    values[0], values[1], values[2], values[3], np.round(values[4], 2),
+                    values[5].strftime('%Y-%m-%d'), values[6].strftime('%Y-%m-%d'), values[7]))
 
         # Convert the rows to a DataFrame
         rows_df = pd.DataFrame(rows_to_add)
@@ -109,12 +107,12 @@ class Simulator:
 
     def print_summary(self):
         """
-        prints the summary of results
+        Prints the summary of results.
         """
-        self.create_summary(print_results = True)
+        self.create_summary(print_results=True)
         print('\n')
         print(f'Initial Balance: {self.initial_capital:.2f}')
-        print(f'Final Balance: {(self.initial_capital + self.total_gain):.2f}')
+        print(f'Final Balance: {self.capital:.2f}')
         print(f'Total gain: {self.total_gain:.2f}')
         print(f'P/L : {(self.total_gain/self.initial_capital)*100:.2f} %')
         print('\n')

@@ -30,7 +30,9 @@ class Backtester(Simulator):
             X = self.scaler.transform(df_new_stock[self.technical_indicators])
             y_pred_proba = self.model.predict_proba(X)[:, 1]
 
-            for index, row in df_new_stock.iterrows():
+            # Iterate over the DataFrame in reverse order
+            for index in reversed(df_new_stock.index):
+                row = df_new_stock.loc[index]
                 date = row['date']
                 close_price = row['close']
                 prediction = y_pred_proba[index]
