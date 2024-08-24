@@ -8,7 +8,7 @@ from stock_prediction.stock_predictor_pipeline import StockPredictorPipeline
 
 def main():
     training_symbols = [
-        'AAPL', 'MSFT', 'AMZN', 'NVDA', 'GOOGL', 'TSLA', 'GOOG', 'BRK.B',
+        'AAPL', 'MSFT', 'AMZN', 'NVDA', 'TSLA','BRK.B',
         'META', 'UNH', 'XOM', 'LLY', 'JPM', 'JNJ', 'PG', 'MA', 'AVGO', 'HD',
         'CVX', 'MRK', 'COST', 'PEP', 'NFLX'
     ]
@@ -27,7 +27,8 @@ def main():
     }
 
     pipeline = StockPredictorPipeline(training_symbols, testing_symbols, technical_indicators, params)
-    pipeline.run()
+    # pipeline.run()
+    pipeline.run_backtest(initial_capital=10000)
 
 if __name__ == "__main__":
     main()
