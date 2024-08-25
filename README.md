@@ -51,7 +51,7 @@ This project is centered around one of the most fundamental strategies in the st
 
 <img width="1493" alt="Screenshot 2024-08-25 at 10 39 37" src="https://github.com/user-attachments/assets/34dc2752-48d2-44a0-bce8-bb1c554bc8b3">
 
-### - *Backtesting and The Trading Strategy -
+### - *Backtesting and The Trading Strategy*
 
 I built a stock simulator and backtesting script to use the model's predictions to making buy and sell decisions. The backtesting simulation has three parameters:
 
