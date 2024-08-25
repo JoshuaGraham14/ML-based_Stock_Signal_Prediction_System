@@ -19,7 +19,10 @@ The chart displays:
 - **Red Crosses:** True minima
 - **Orange Crosses:** True maxima
 
-<img width="1501" alt="Screenshot 2024-08-23 at 00 55 41" src="https://github.com/user-attachments/assets/4e96d5fa-1311-4b6c-a72f-7036b8155ced">
+<p>
+    <img width="1501" alt="Screenshot 2024-08-23 at 00 55 41" src="https://github.com/user-attachments/assets/4e96d5fa-1311-4b6c-a72f-7036b8155ced">
+    <em>image_caption</em>
+</p>
 
 ## Understanding My Project
 
