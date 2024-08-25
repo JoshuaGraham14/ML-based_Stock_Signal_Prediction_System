@@ -51,15 +51,15 @@ This project is centered around one of the most fundamental strategies in the st
    - The trained model is then used to predict whether an inputted stock's price on a given day is a local minimum or maximum.
    - Initially, I used a threshold of 0.5 - where points below 0.5 were classified as minima and points above 0.5 as maxima. However, this approach led to an excessive number of false positives, making the predictions completely unreliable:
 
-   <insert 0.5 threshold img>
+<img width="1491" alt="Screenshot 2024-08-25 at 10 40 50" src="https://github.com/user-attachments/assets/64eedb0a-9a91-478d-ab0b-8ab47b37cf03">
 
    - Therefore, to solve this issue, a much stricter threshold of 0.001 for minima and 0.999 for maxima was applied, significantly reducing the number of false positives and giving much more accurate results:
 
-   <insert lower threshold img>
+<img width="1490" alt="Screenshot 2024-08-25 at 10 42 06" src="https://github.com/user-attachments/assets/46a4cd29-9d1b-4cb0-afeb-9e3adcc5b0c5">
 
    - When the true local minima and maxima are overlaid on the predicted points, the model does a pretty good job of identifing these key turning points, despite a few false positives still remaining:
 
-   <insert overlay true mins img>
+<img width="1493" alt="Screenshot 2024-08-25 at 10 39 37" src="https://github.com/user-attachments/assets/34dc2752-48d2-44a0-bce8-bb1c554bc8b3">
 
 ### Backtesting and The Trading Strategy
 
@@ -78,8 +78,8 @@ The way the trading strategy logic works is as follows:
 
 In testing, starting with an initial capital of $10,000, the parameters (0.001, 0.999, 0.005) were found to be most effective. A lower `perc_lost` value ensures that buying/selling signals which were predicted incorrectly are quickly exited, thereby minimising losses.
 
-<insert portfolio img>
-<insert portfolio graph img>
+<img width="696" alt="Screenshot 2024-08-25 at 18 59 45" src="https://github.com/user-attachments/assets/f72185d3-096c-492c-a7bf-c8faf7523dca">
+<img width="1458" alt="Screenshot 2024-08-25 at 17 23 43" src="https://github.com/user-attachments/assets/a022da3c-8f0f-4d5a-ab02-17122e85ce56">
 
 ## Installation
 
