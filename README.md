@@ -94,9 +94,6 @@ In testing, starting with an initial capital of $10,000, the parameters (0.001, 
    
 ## Usage
 
-### Prerequisites
-Ensure you have installed all necessary dependencies as listed in `requirements.txt`. 
-
 ### Step 1: Fetch Latest Stock Data (Optional)
 
 Before running the main prediction pipeline or backtesting, you may want to fetch the latest stock data for the day. This step is optional because the system automatically fetches live data via the API if the requested stock data is not available locally.
