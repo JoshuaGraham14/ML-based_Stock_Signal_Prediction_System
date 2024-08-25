@@ -35,7 +35,7 @@ This project is centered around one of the most fundamental strategies in the st
 1. **Creating the Training Set:**
 
    - The training data is constructed using a variety of technical indicators, including n-day regressions, RSI, SMA, EMA, and normalised values. The model is trained on multiple inputted stocks, with the idea of finding an underlying relationship between all the stocks.
-   - I then create the training set labels, by calculating the local minimums and maximums of the given stocks. For example, in the figure below of Google's stock chart, the green dots are the local minima and red dots are the local maxima.
+   - I then create the training set labels, by calculating the local minimums and maximums of the given stocks. For example, in the figure below of Google's stock chart, the green dots are the local minima and red dots are the local maxima:
 
 <img width="1352" alt="Screenshot 2024-08-25 at 10 38 10" src="https://github.com/user-attachments/assets/667f8cae-8c4b-4d91-a87d-64fc6400c13b">
 
