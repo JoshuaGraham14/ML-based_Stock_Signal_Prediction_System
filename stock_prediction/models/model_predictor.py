@@ -55,10 +55,9 @@ class ModelPredictor:
 
     def filter_predictions(self, df):
         """
-        Filter out predicted minima and maxima that are too close to each other.
+        Modify predicted minima and maxima that are too close to each other by setting them to neutral.
         """
         df = df.sort_values(by='date').reset_index(drop=True)
-        keep_indices = []
 
         last_minima_idx = -self.window_size - 1
         last_maxima_idx = -self.window_size - 1
@@ -66,24 +65,25 @@ class ModelPredictor:
         for idx, row in df.iterrows():
             if row['predicted_target'] == 0:
                 if idx - last_minima_idx > self.window_size:
-                    keep_indices.append(idx)
                     last_minima_idx = idx
+                else:
+                    df.at[idx, 'predicted_target'] = -1  # Set to neutral
+
             elif row['predicted_target'] == 1:
                 if idx - last_maxima_idx > self.window_size:
-                    keep_indices.append(idx)
                     last_maxima_idx = idx
+                else:
+                    df.at[idx, 'predicted_target'] = -1  # Set to neutral
 
-        filtered_df = df.loc[keep_indices].reset_index(drop=True)
+        return df
 
-        return filtered_df
-
-    def plot_stock_predictions(self, axs, df_new_stock, df, stock_symbol, index):
+    def plot_stock_predictions(self, axs, df, stock_symbol, index):
         """
         Plot the stock price and predictions for a given stock symbol.
         """
-        df_new_stock['date'] = pd.to_datetime(df_new_stock['date'], format='%d/%m/%Y')
-        x = df_new_stock['date']
-        y = df_new_stock["close"]
+        df['date'] = pd.to_datetime(df['date'], format='%d/%m/%Y')
+        x = df['date']
+        y = df["close"]
         axs[index].plot(x, y, ls='-', color="black", label=f"{stock_symbol} Daily")
 
         minima_points = df[df['predicted_target'] == 0]
@@ -123,7 +123,7 @@ class ModelPredictor:
             df_predictions = self.filter_predictions(df_predictions)
 
             if plot_graph:
-                self.plot_stock_predictions(axs, df_new_stock, df_predictions, symbol, index)
+                self.plot_stock_predictions(axs, df_predictions, symbol, index)
 
         if plot_graph:
             plt.tight_layout()

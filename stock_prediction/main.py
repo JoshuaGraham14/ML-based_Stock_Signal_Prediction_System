@@ -28,7 +28,7 @@ def main():
 
     pipeline = StockPredictorPipeline(training_symbols, testing_symbols, technical_indicators, params)
     # pipeline.run()
-    pipeline.run_backtest(initial_capital=10000)
+    pipeline.run_backtest(initial_capital=10000, sell_perc=0.04, hold_till=5, stop_perc=0.0005)
 
 if __name__ == "__main__":
     main()

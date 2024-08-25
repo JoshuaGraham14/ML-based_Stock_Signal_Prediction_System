@@ -51,10 +51,8 @@ class Backtester(Simulator):
                     self.buy(stock=symbol, buy_price=close_price, buy_date=date)
                     self.trade_markers.append(('B', date, current_value))  # Mark buy on portfolio value
 
-                # Sell signal: Sell if the prediction indicates a local maximum (1)
+                # Sell signal: Sell if the prediction indicates a local maximum (1) or if stop loss is triggered
                 if symbol in self.buy_orders:
-                    buy_date = self.buy_orders[symbol][3]  # Date of the buy
-                    days_held = (date - buy_date).days
                     buy_price = self.buy_orders[symbol][0]
 
                     # Condition for taking profit at local maximum
@@ -62,12 +60,7 @@ class Backtester(Simulator):
                         self.sell(stock=symbol, sell_price=close_price, n_shares_sell=self.buy_orders[symbol][1], sell_date=date)
                         self.trade_markers.append(('S', date, current_value))  # Mark sell on portfolio value
 
-                    # Condition for holding period
-                    elif days_held >= self.hold_till:
-                        self.sell(stock=symbol, sell_price=close_price, n_shares_sell=self.buy_orders[symbol][1], sell_date=date)
-                        self.trade_markers.append(('S', date, current_value))  # Mark sell on portfolio value
-
-                    # Trailing Stop Loss: Protects against small dips
+                    # Stop Loss: Protects against loss beyond stop_perc
                     elif close_price <= buy_price * (1 - self.stop_perc):
                         self.sell(stock=symbol, sell_price=close_price, n_shares_sell=self.buy_orders[symbol][1], sell_date=date)
                         self.trade_markers.append(('S', date, current_value))  # Mark sell on portfolio value
@@ -77,7 +70,6 @@ class Backtester(Simulator):
         # After the backtest, plot the results
         if show_graph:
             self.plot_results(df_new_stock, df_predictions, symbol)
-        
 
     def plot_results(self, df_new_stock, df_predictions, symbol):
         """
@@ -104,14 +96,27 @@ class Backtester(Simulator):
 
         # Create secondary y-axis for portfolio value
         ax2 = ax1.twinx()
-        ax2.plot(self.dates, self.portfolio_values, color='blue', label='Portfolio Value', alpha=0.7)
+
+        # Plot the portfolio value only between buys and sells with color coding for profit/loss
+        buy_sell_pairs = [(self.trade_markers[i], self.trade_markers[i + 1])
+                        for i in range(0, len(self.trade_markers) - 1, 2)]
+
+        for buy, sell in buy_sell_pairs:
+            buy_idx = self.dates.index(buy[1])
+            sell_idx = self.dates.index(sell[1])
+
+            # Determine if the trade was profitable
+            trade_color = 'green' if self.portfolio_values[sell_idx] > self.portfolio_values[buy_idx] else 'red'
+
+            # Plot portfolio value between buy and sell
+            ax2.plot(self.dates[buy_idx:sell_idx+1], self.portfolio_values[buy_idx:sell_idx+1], color=trade_color, alpha=0.7)
 
         # Plot buy/sell markers on the portfolio value line
         for trade in self.trade_markers:
             label, trade_date, value = trade
             ax2.annotate(label, xy=(trade_date, value), xytext=(0, 10),
-                        textcoords='offset points', ha='center', fontsize=10, color='black',
-                        arrowprops=dict(facecolor='black', shrink=0.05))
+                textcoords='offset points', ha='center', fontsize=10, color='black', 
+                arrowprops=dict(facecolor='black', shrink=0.05, alpha=0.5))
 
         ax2.set_ylabel("Portfolio Value (USD)")
         ax2.legend(loc="upper right")

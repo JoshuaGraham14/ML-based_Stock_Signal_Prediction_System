@@ -67,3 +67,4 @@ class StockPredictorPipeline:
         )
 
         backtester.run()
+        
