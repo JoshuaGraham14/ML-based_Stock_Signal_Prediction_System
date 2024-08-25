@@ -5,12 +5,18 @@ This repository contains a machine learning-based stock signal prediction system
 <img width="500" alt="Screenshot 2024-08-26 at 00 09 05" src="https://github.com/user-attachments/assets/5dfee32d-39d2-45cf-8cb5-0092e5786952">
 
 ## Features
-- **Data Collection:** Fetches stock data using the Twelve Data API, using a custom API handler, with integrated caching and data processing capabilities.
-- **Technical Indicators:** Computes and fetches over 10 technical indicators (e.g., EMA, RSI and n-day regressions) as features for model training. 
-- **Stock Signal Classification:** Uses logistic regression to classify stock price points as local minima or maxima, generating actionable buy/sell signals.
-- **Backtesting:** Includes a backtesting simulation script that evaluates trading strategies using historical data, optimising for maximum profitability.
-- **Visualisation:** Provides tools to visualise stock trends and model predictions using Matplotlib and Seaborn, enhancing decision-making.
-- **Extensibility:** Easily adaptable for different stocks and trading intervals.
+- **Data Collection:**
+   - Fetches stock data using the Twelve Data API, using a custom API handler, with integrated caching and data processing capabilities.
+- **Technical Indicators:**
+   - Computes and fetches over 10 technical indicators (e.g., EMA, RSI and n-day regressions) as features for model training. 
+- **Stock Signal Classification:**
+   - Uses logistic regression to classify stock price points as local minima or maxima, generating actionable buy/sell signals.
+- **Backtesting:**
+   - Includes a backtesting simulation script that evaluates trading strategies using historical data, optimising for maximum profitability.
+- **Visualisation:**
+   - Provides tools to visualise stock trends and model predictions using Matplotlib and Seaborn, enhancing decision-making.
+- **Extensibility:**
+   - Easily adaptable for different stocks and trading intervals.
 
 ## Understanding My Project
 
