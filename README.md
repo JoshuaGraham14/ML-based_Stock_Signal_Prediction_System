@@ -1,5 +1,5 @@
 # ML-based Stock Signal Prediction System
-This repository contains a machine learning-based system designed to predict buy/sell signals by classifying stock price points as local minima or maxima. The system utilises historical stock data, technical indicators, and a logistic regression model to assist in making informed trading decisions.
+This repository contains a machine learning-based stock signal prediction system which uses logistic regression on real-time historical data to classify stock price points as minima or maxima, forecasting buy/sell decisions. It also includes backtesting simulation with a custom trading strategy to optimise and evaluate performance.
 
 <img width="1441" alt="Screenshot 2024-08-26 at 00 10 14" src="https://github.com/user-attachments/assets/86864c23-19bf-4370-a509-973cb7a11e26">
 <img width="500" alt="Screenshot 2024-08-26 at 00 09 05" src="https://github.com/user-attachments/assets/5dfee32d-39d2-45cf-8cb5-0092e5786952">
@@ -8,6 +8,7 @@ This repository contains a machine learning-based system designed to predict buy
 - **Data Collection:** Fetches stock data using the Twelve Data API, using a custom API handler, with integrated caching and data processing capabilities.
 - **Technical Indicators:** Computes and fetches over 10 technical indicators (e.g., EMA, RSI and n-day regressions) as features for model training. 
 - **Stock Signal Classification:** Uses logistic regression to classify stock price points as local minima or maxima, generating actionable buy/sell signals.
+- **Backtesting:** Includes a backtesting simulation script that evaluates trading strategies using historical data, optimising for maximum profitability.
 - **Visualisation:** Provides tools to visualise stock trends and model predictions using Matplotlib and Seaborn, enhancing decision-making.
 - **Extensibility:** Easily adaptable for different stocks and trading intervals.
 
@@ -126,9 +127,9 @@ To simulate trading based on the model's predictions and evaluate the strategy, 
 pipeline.run_backtest(initial_capital=10000, stop_perc=0.0005)
 ```
 
-### Customizing the Parameters
+### Customising the Parameters
 
-In the `main.py` file, you can customize the following parameters to fit your needs:
+In the `main.py` file, you can customise the following parameters to fit your needs:
 
 - **training_symbols**: List of stock symbols to be used for training the model.
 - **testing_symbols**: List of stock symbols to be used for testing or backtesting.
@@ -138,7 +139,7 @@ In the `main.py` file, you can customize the following parameters to fit your ne
   - `min_max_order`: Order of minimum/maximum points calculation.
   - `min_threshold`: Threshold for classifying minima.
   - `max_threshold`: Threshold for classifying maxima.
-  - `window_size`: Window size for smoothing predictions.
+  - `window_sise`: Window sise for smoothing predictions.
 
 ### Example of Main.py
 
@@ -153,7 +154,7 @@ def main():
     ]
     testing_symbols = ['GOOG']
     technical_indicators = [
-        "normalized_value", "2_reg", "3_reg", "5_reg", "10_reg", "20_reg", 
+        "normalised_value", "2_reg", "3_reg", "5_reg", "10_reg", "20_reg", 
         "50_reg", "adx", "ema", "sma", "rsi", "percent_b"
     ]
 
@@ -181,4 +182,4 @@ if __name__ == "__main__":
 ### Additional Notes
 
 - **Live Data Fetching**: If you skip the optional data-fetching step, the system will automatically pull live data for any unseen stock symbols during runtime.
-- **Visualization**: The pipeline includes functionality to visualize predictions and backtesting results using Matplotlib, making it easier to analyze the model’s performance visually.
+- **Visualisation**: The pipeline includes functionality to visualise predictions and backtesting results using Matplotlib, making it easier to analyze the model’s performance visually.
