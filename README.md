@@ -13,14 +13,14 @@ This repository contains a machine learning-based system designed to predict buy
 
 ## Understanding My Project
 
-### The Strategy
+### - *The Strategy*
 
 This project is centered around one of the most fundamental strategies in the stock market: **buying low and selling high**. The goal is to develop a model that predicts the low and high points of stock prices as accurately as possible. At a high level, the project can be broken down into two main steps:
 
 1. **The ML Classification Model**: Identify price points as either local minima (buying opportunities), local maxima (selling opportunities), or neutral points.
 2. **Backtesting and The Trading Strategy**: Use backtesting to devise a trading strategy that uses these predictions to automate trades; the objective being to maximise profits.
 
-### The ML Classification Model
+### - *The ML Classification Model*
 
 1. **Creating the Training Set:**
 
@@ -51,7 +51,7 @@ This project is centered around one of the most fundamental strategies in the st
 
 <img width="1493" alt="Screenshot 2024-08-25 at 10 39 37" src="https://github.com/user-attachments/assets/34dc2752-48d2-44a0-bce8-bb1c554bc8b3">
 
-### Backtesting and The Trading Strategy
+### - *Backtesting and The Trading Strategy -
 
 I built a stock simulator and backtesting script to use the model's predictions to making buy and sell decisions. The backtesting simulation has three parameters:
 
