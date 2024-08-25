@@ -106,7 +106,7 @@ python stock_prediction/scripts/fetch_data.py
 
 ### Step 2: Running the Prediction Pipeline
 
-The main functionality of the project is executed through the `StockPredictorPipeline` class. You have the option to either run the prediction model to identify potential buy/sell signals or perform backtesting to evaluate the trading strategy's profitability.
+The main functionality of the project is executed through the `StockPredictorPipeline` class. You have either option (or both) to run the prediction model to identify potential buy/sell signals or perform backtesting to evaluate the trading strategy's profitability.
 
 #### Running the Prediction Model
 
@@ -123,10 +123,8 @@ This will process the stock data, train the model, and generate predictions.
 To simulate trading based on the model's predictions and evaluate the strategy, use the `run_backtest()` method:
 
 ```python
-pipeline.run_backtest(initial_capital=10000, sell_perc=0.04, hold_till=5, stop_perc=0.0005)
+pipeline.run_backtest(initial_capital=10000, stop_perc=0.0005)
 ```
-
-This will backtest the strategy with an initial capital of $10,000, a sell percentage of 4%, a hold period of 5 days, and a stop-loss percentage of 0.05%.
 
 ### Customizing the Parameters
 
@@ -142,19 +140,11 @@ In the `main.py` file, you can customize the following parameters to fit your ne
   - `max_threshold`: Threshold for classifying maxima.
   - `window_size`: Window size for smoothing predictions.
 
-### Example of Running the Main Script
+### Example of Main.py
 
 The following is an example of how the `main.py` script is structured:
 
 ```python
-import sys
-import os
-import matplotlib.pyplot as plt
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # Add the parent directory to sys.path
-
-from stock_prediction.stock_predictor_pipeline import StockPredictorPipeline
-
 def main():
     training_symbols = [
         'AAPL', 'MSFT', 'AMZN', 'NVDA', 'TSLA','BRK.B',
@@ -177,7 +167,7 @@ def main():
 
     pipeline = StockPredictorPipeline(training_symbols, testing_symbols, technical_indicators, params)
     
-    # Choose one of the following:
+    # Choose one or both of the following:
     # To run the model and get predictions:
     # pipeline.run()
     
@@ -187,8 +177,6 @@ def main():
 if __name__ == "__main__":
     main()
 ```
-
-In this script, the `StockPredictorPipeline` class is initialized with a set of training and testing symbols, technical indicators, and model parameters. You can choose to either run the model for predictions using `pipeline.run()` or perform backtesting using `pipeline.run_backtest()`.
 
 ### Additional Notes
 
