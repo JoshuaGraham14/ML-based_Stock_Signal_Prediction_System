@@ -42,9 +42,9 @@ This project is centered around one of the most fundamental strategies in the st
 2. **Training the Model:**
 
    - I used a logistic regression model to classify the points.
-   - The model is trained exclusively on points labeled as local minima or maxima.
+   - The model is trained exclusively on points labeled as local minima or maxima. This is the confusion matrix I get after using an 80/20 split to evaluate my classification:
 
-   <insert matrix img>
+<img width="388" alt="Screenshot 2024-08-26 at 00 07 23" src="https://github.com/user-attachments/assets/80941fdc-d08d-4c15-a581-3a96bbd09ff7">
 
 3. **Using the Model for Prediction:**
 
