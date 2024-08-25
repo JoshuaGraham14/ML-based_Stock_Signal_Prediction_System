@@ -28,7 +28,7 @@ The chart displays:
 This project is centered around one of the most fundamental strategies in the stock market: **buying low and selling high**. The goal is to develop a model that predicts the low and high points of stock prices as accurately as possible. At a high level, the project can be broken down into two main steps:
 
 1. **The ML Classification Model**: Identify price points as either local minima (buying opportunities), local maxima (selling opportunities), or neutral points.
-2. **Backtesting and The Trading Strategy**: Use backtesting to devise a trading strategy that uses these predictions to automate tradesl; the objective being to maximise profits.
+2. **Backtesting and The Trading Strategy**: Use backtesting to devise a trading strategy that uses these predictions to automate trades; the objective being to maximise profits.
 
 ### The ML Classification Model
 
@@ -53,11 +53,11 @@ This project is centered around one of the most fundamental strategies in the st
 
 <img width="1491" alt="Screenshot 2024-08-25 at 10 40 50" src="https://github.com/user-attachments/assets/64eedb0a-9a91-478d-ab0b-8ab47b37cf03">
 
-   - Therefore, to solve this issue, a much stricter threshold of 0.001 for minima and 0.999 for maxima was applied, significantly reducing the number of false positives and giving much more accurate results:
+   - Therefore, to solve this issue, a much stricter threshold of 0.001 for minima and 0.999 for maxima was applied, significantly reducing the number of false positives. As you can see, these results look much better!:
 
 <img width="1490" alt="Screenshot 2024-08-25 at 10 42 06" src="https://github.com/user-attachments/assets/46a4cd29-9d1b-4cb0-afeb-9e3adcc5b0c5">
 
-   - When the true local minima and maxima are overlaid on the predicted points, the model does a pretty good job of identifing these key turning points, despite a few false positives still remaining:
+   - When the true local minima and maxima are overlaid on the predicted points, as you can see, the model does a pretty good job of identifing these key turning points, despite a few false positives still remaining:
 
 <img width="1493" alt="Screenshot 2024-08-25 at 10 39 37" src="https://github.com/user-attachments/assets/34dc2752-48d2-44a0-bce8-bb1c554bc8b3">
 
