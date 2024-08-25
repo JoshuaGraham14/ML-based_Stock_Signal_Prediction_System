@@ -2,6 +2,7 @@
 This repository contains a machine learning-based system designed to predict buy/sell signals by classifying stock price points as local minima or maxima. The system utilises historical stock data, technical indicators, and a logistic regression model to assist in making informed trading decisions.
 
 <img width="1441" alt="Screenshot 2024-08-26 at 00 10 14" src="https://github.com/user-attachments/assets/86864c23-19bf-4370-a509-973cb7a11e26">
+<img width="500" alt="Screenshot 2024-08-26 at 00 09 05" src="https://github.com/user-attachments/assets/5dfee32d-39d2-45cf-8cb5-0092e5786952">
 
 ## Features
 - **Data Collection:** Fetches stock data using the Twelve Data API, using a custom API handler, with integrated caching and data processing capabilities.
