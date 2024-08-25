@@ -50,7 +50,7 @@ class ModelTrainer:
         data = data[self.technical_indicators + ['target']]
         return data.dropna(axis=0)
 
-    def train_model(self, training_df, show_intercept=True, show_coefficients=True):
+    def train_model(self, training_df, show_intercept=True, show_coefficients=False):
         """
         Train a logistic regression model on the training data.
         """
