@@ -91,3 +91,109 @@ In testing, starting with an initial capital of $10,000, the parameters (0.001, 
     "api_key": "your_twelvedata_api_key"
    }
    ```
+   
+## Usage
+
+### Prerequisites
+Ensure you have installed all necessary dependencies as listed in `requirements.txt`. 
+
+### Step 1: Fetch Latest Stock Data (Optional)
+
+Before running the main prediction pipeline or backtesting, you may want to fetch the latest stock data for the day. This step is optional because the system automatically fetches live data via the API if the requested stock data is not available locally.
+
+To fetch the latest stock data, run the following script:
+
+```bash
+python stock_prediction/scripts/fetch_data.py
+```
+
+### Step 2: Running the Prediction Pipeline
+
+The main functionality of the project is executed through the `StockPredictorPipeline` class. You have the option to either run the prediction model to identify potential buy/sell signals or perform backtesting to evaluate the trading strategy's profitability.
+
+#### Running the Prediction Model
+
+To run the model and get predictions for potential buy and sell signals, use the `run()` method:
+
+```python
+pipeline.run()
+```
+
+This will process the stock data, train the model, and generate predictions.
+
+#### Running the Backtesting
+
+To simulate trading based on the model's predictions and evaluate the strategy, use the `run_backtest()` method:
+
+```python
+pipeline.run_backtest(initial_capital=10000, sell_perc=0.04, hold_till=5, stop_perc=0.0005)
+```
+
+This will backtest the strategy with an initial capital of $10,000, a sell percentage of 4%, a hold period of 5 days, and a stop-loss percentage of 0.05%.
+
+### Customizing the Parameters
+
+In the `main.py` file, you can customize the following parameters to fit your needs:
+
+- **training_symbols**: List of stock symbols to be used for training the model.
+- **testing_symbols**: List of stock symbols to be used for testing or backtesting.
+- **technical_indicators**: List of technical indicators to be used in the model.
+- **params**: Dictionary of model parameters including:
+  - `outputsize`: Number of data points to fetch.
+  - `min_max_order`: Order of minimum/maximum points calculation.
+  - `min_threshold`: Threshold for classifying minima.
+  - `max_threshold`: Threshold for classifying maxima.
+  - `window_size`: Window size for smoothing predictions.
+
+### Example of Running the Main Script
+
+The following is an example of how the `main.py` script is structured:
+
+```python
+import sys
+import os
+import matplotlib.pyplot as plt
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # Add the parent directory to sys.path
+
+from stock_prediction.stock_predictor_pipeline import StockPredictorPipeline
+
+def main():
+    training_symbols = [
+        'AAPL', 'MSFT', 'AMZN', 'NVDA', 'TSLA','BRK.B',
+        'META', 'UNH', 'XOM', 'LLY', 'JPM', 'JNJ', 'PG', 'MA', 'AVGO', 'HD',
+        'CVX', 'MRK', 'COST', 'PEP', 'NFLX'
+    ]
+    testing_symbols = ['GOOG']
+    technical_indicators = [
+        "normalized_value", "2_reg", "3_reg", "5_reg", "10_reg", "20_reg", 
+        "50_reg", "adx", "ema", "sma", "rsi", "percent_b"
+    ]
+
+    params = {
+        'outputsize': 1200,
+        'min_max_order': 5,
+        'min_threshold': 0.0001,
+        'max_threshold': 0.9999,
+        'window_size': 10
+    }
+
+    pipeline = StockPredictorPipeline(training_symbols, testing_symbols, technical_indicators, params)
+    
+    # Choose one of the following:
+    # To run the model and get predictions:
+    # pipeline.run()
+    
+    # To run backtesting and evaluate the strategy:
+    pipeline.run_backtest(initial_capital=10000, sell_perc=0.04, hold_till=5, stop_perc=0.0005)
+
+if __name__ == "__main__":
+    main()
+```
+
+In this script, the `StockPredictorPipeline` class is initialized with a set of training and testing symbols, technical indicators, and model parameters. You can choose to either run the model for predictions using `pipeline.run()` or perform backtesting using `pipeline.run_backtest()`.
+
+### Additional Notes
+
+- **Live Data Fetching**: If you skip the optional data-fetching step, the system will automatically pull live data for any unseen stock symbols during runtime.
+- **Visualization**: The pipeline includes functionality to visualize predictions and backtesting results using Matplotlib, making it easier to analyze the model’s performance visually.
