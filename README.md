@@ -78,8 +78,9 @@ The way the trading strategy logic works is as follows:
 
 In testing, starting with an initial capital of $10,000, the parameters (0.001, 0.999, 0.005) were found to be most effective. A lower `perc_lost` value ensures that buying/selling signals which were predicted incorrectly are quickly exited, thereby minimising losses.
 
-<img width="696" alt="Screenshot 2024-08-25 at 18 59 45" src="https://github.com/user-attachments/assets/f72185d3-096c-492c-a7bf-c8faf7523dca">
-<img width="1458" alt="Screenshot 2024-08-25 at 17 23 43" src="https://github.com/user-attachments/assets/a022da3c-8f0f-4d5a-ab02-17122e85ce56">
+<img width="708" alt="Screenshot 2024-08-26 at 00 09 05" src="https://github.com/user-attachments/assets/5dfee32d-39d2-45cf-8cb5-0092e5786952">
+
+<img width="1441" alt="Screenshot 2024-08-26 at 00 10 14" src="https://github.com/user-attachments/assets/86864c23-19bf-4370-a509-973cb7a11e26">
 
 ## Installation
 
